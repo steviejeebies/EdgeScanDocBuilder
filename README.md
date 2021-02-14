@@ -1,5 +1,8 @@
 # EdgeScanDocBuilder
 
+## Must have installed
+* NodeJS
+
 ### Description
 A build script to take documentation written in markdown stored within a git
 repository and render it to various output formats.
