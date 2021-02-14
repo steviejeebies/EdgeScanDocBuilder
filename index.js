@@ -1,1 +1,1 @@
-console.log("DOCBUILDER NODE PROJECT IS RUNNING SUCCESSFULLY");
+require("./app/app");
