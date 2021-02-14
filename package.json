@@ -1,0 +1,20 @@
+{
+  "name": "EdgeScanDocBuilder",
+  "version": "1.0.0",
+  "description": "A build script to take documentation written in markdown stored within a git\r repository and render it to various output formats.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/steviejeebies/EdgeScanDocBuilder.git"
+  },
+  "keywords": [],
+  "author": "Stephen Rowe <rowes@tcd.ie> (none)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/steviejeebies/EdgeScanDocBuilder/issues"
+  },
+  "homepage": "https://github.com/steviejeebies/EdgeScanDocBuilder#readme"
+}
