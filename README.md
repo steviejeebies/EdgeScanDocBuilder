@@ -1,6 +1,6 @@
 # EdgeScanDocBuilder
 
-## Must have installed
+### Required
 * NodeJS
 
 ### Description
