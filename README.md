@@ -13,10 +13,14 @@ The formats it (will) support are:
 
 ### Installation
 To install this program across your system, run the following command in this top-level directory
-```npm install -g```
+```
+npm install -g
+```
 This will allow you to call the command "docbuild \[args\]" in any directory on your PC, with docbuild knowing the directory you called it from.
 To uninstall:
-```npm uninstall -g```
+```
+npm uninstall -g
+```
 
 
 ### Group 30 - Team Members:
