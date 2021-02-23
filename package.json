@@ -4,7 +4,8 @@
   "description": "A build script to take documentation written in markdown stored within a git\r repository and render it to various output formats.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
   },
   "repository": {
     "type": "git",
@@ -18,7 +19,12 @@
   },
   "homepage": "https://github.com/steviejeebies/EdgeScanDocBuilder#readme",
   "dependencies": {
-    "yargs": "^16.2.0"
+    "yargs": "^16.2.0",
+    "node-fetch": "^2.6.1"
+  },
+  "devDependencies": {
+    "eslint": "^7.20.0",
+    "eslint-config-strongloop": "^2.1.0"
   },
   "bin": {
     "docbuild": "index.js"
