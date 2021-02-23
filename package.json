@@ -16,5 +16,11 @@
   "bugs": {
     "url": "https://github.com/steviejeebies/EdgeScanDocBuilder/issues"
   },
-  "homepage": "https://github.com/steviejeebies/EdgeScanDocBuilder#readme"
+  "homepage": "https://github.com/steviejeebies/EdgeScanDocBuilder#readme",
+  "dependencies": {
+    "yargs": "^16.2.0"
+  },
+  "bin": {
+    "docbuild": "index.js"
+  }
 }
