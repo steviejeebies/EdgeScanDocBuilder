@@ -40,27 +40,56 @@ function makeRequest(method, url, apiKey, content = undefined) {
     .then(text => JSON.parse(text));
 }
 
+/* makeArticle posts HTML formatted to a string to users endpoint */
+function makeArticle(method, baseUrl, apiKey, folderID, content) {
 
-// const testContent = `
-//   <h1>Test Data</h1>
-//   <p>
-//     This piece of test data is to ensure content can be uploaded to freshdesk
-//     successfully
-//
-//   Here is a link to the
-//   <a href="https://developer.freshdesk.com/api/#solutions">freshdesk docs</a>
-// `;
+  let url = baseUrl+'/api/v2/solutions/folders/'+folderID.toString()+'/articles'
+  
+    const options = {
+    method: method,
+    body : JSON.stringify(content),
+    headers: {
+      Authorization: Buffer.from(`${apiKey}:nopass`).toString('base64'),
+      'Content-Type': 'application/json',
+    },
+  };
+
+  return fetch(url, options)
+  .then(res => res.json())
+  .then(json => console.log(json))
+  .catch(err => console.log(err))
+}
+
 
 if (!process.env.FRESHDESK_TOKEN || !process.env.FRESHDESK_HELPDESK_NAME) {
   throw new Error(`The environment variables FRESHDESK_TOKEN and
     FRESHDESK_HELPDESK_NAME must be set`);
 }
 
+const testingApiKey = 'tFq8yPvZvHwxe3fjJQko';
+const testingHelpdeskName = 'newaccount1614434119374'
+const tesetingfolderID = 80000341119
+
 const apiKey = process.env.FRESHDESK_TOKEN;
 const helpdeskName = process.env.FRESHDESK_HELPDESK_NAME;
-const baseUrl = `https://${helpdeskName}.freshdesk.com`;
+const baseUrl = `https://${testingHelpdeskName}.freshdesk.com`;
+
+let content = {
+  title : "testing Article with links3",
+  description : `<h1>Test Data</h1>
+  <p>
+    This piece of test data is to ensure content can be uploaded to freshdesk
+    successfully
+
+  Here is a link to the
+  <a href="https://developer.freshdesk.com/api/#solutions">freshdesk docs</a>`,
+  status : 1
+}
 
 
 // Test auth by making a sample request
-makeRequest('GET', baseUrl + '/api/v2/solutions/categories', apiKey)
-  .then(categories => console.log(categories));
+ makeRequest('GET', baseUrl + '/api/v2/solutions/categories', apiKey)
+   .then(categories => console.log(categories));
+
+makeArticle("POST", baseUrl, testingApiKey, tesetingfolderID, content)
+
