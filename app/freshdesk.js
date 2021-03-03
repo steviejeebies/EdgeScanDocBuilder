@@ -2,6 +2,11 @@
 
 const fetch = require('node-fetch');
 
+const apiKey = process.env.FRESHDESK_TOKEN;
+const helpdeskName = process.env.FRESHDESK_HELPDESK_NAME;
+
+const baseUrl = `https://${helpdeskName}.freshdesk.com`;
+
 /**
  * @typedef {('POST'|'GET'|'PUT'|'DELETE')} Verbs
  */
@@ -43,11 +48,13 @@ function makeRequest(method, url, apiKey, content = undefined) {
 /* makeArticle posts HTML formatted to a string to users endpoint */
 function makeArticle(method, baseUrl, apiKey, folderID, content) {
 
-  let url = baseUrl+'/api/v2/solutions/folders/'+folderID.toString()+'/articles'
-  
-    const options = {
+  let url =
+      baseUrl + '/api/v2/solutions/folders/'
+      + folderID.toString() + '/articles';
+
+  const options = {
     method: method,
-    body : JSON.stringify(content),
+    body: JSON.stringify(content),
     headers: {
       Authorization: Buffer.from(`${apiKey}:nopass`).toString('base64'),
       'Content-Type': 'application/json',
@@ -55,9 +62,9 @@ function makeArticle(method, baseUrl, apiKey, folderID, content) {
   };
 
   return fetch(url, options)
-  .then(res => res.json())
-  .then(json => console.log(json))
-  .catch(err => console.log(err))
+    .then(res => res.json())
+    .then(json => console.log(json))
+    .catch(err => console.log(err));
 }
 
 
@@ -66,30 +73,27 @@ if (!process.env.FRESHDESK_TOKEN || !process.env.FRESHDESK_HELPDESK_NAME) {
     FRESHDESK_HELPDESK_NAME must be set`);
 }
 
-const testingApiKey = 'tFq8yPvZvHwxe3fjJQko';
-const testingHelpdeskName = 'newaccount1614434119374'
-const tesetingfolderID = 80000341119
-
-const apiKey = process.env.FRESHDESK_TOKEN;
-const helpdeskName = process.env.FRESHDESK_HELPDESK_NAME;
-const baseUrl = `https://${testingHelpdeskName}.freshdesk.com`;
-
 let content = {
-  title : "testing Article with links3",
-  description : `<h1>Test Data</h1>
+  title: 'testing Article with links3',
+  description: `<h1>Test Data</h1>
   <p>
     This piece of test data is to ensure content can be uploaded to freshdesk
     successfully
 
   Here is a link to the
   <a href="https://developer.freshdesk.com/api/#solutions">freshdesk docs</a>`,
-  status : 1
-}
+  status: 1,
+};
 
+// TEST CALLS TO ABOVE FUNCTIONS
 
-// Test auth by making a sample request
- makeRequest('GET', baseUrl + '/api/v2/solutions/categories', apiKey)
-   .then(categories => console.log(categories));
+// // Test auth by making a sample request
+makeRequest('GET', baseUrl + '/api/v2/solutions/categories', apiKey)
+  .then(categories => console.log(categories));
 
-makeArticle("POST", baseUrl, testingApiKey, tesetingfolderID, content)
+// this was taken from the URL of a test folder I created on FreskDesk site
+const testFolderID = 69000222574;
+
+// Push an article to FreshDesk API, will be visible on site after
+makeArticle('POST', baseUrl, apiKey, testFolderID, content);
 
