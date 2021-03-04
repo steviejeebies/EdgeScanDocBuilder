@@ -32,3 +32,6 @@ if (argv._.includes('pdf')) {
 if (argv._.includes('freshdesk')) {
   require('./app/freshdesk');
 }
+if(argv._.includes('html')) {
+  //require('./app/html');
+}
