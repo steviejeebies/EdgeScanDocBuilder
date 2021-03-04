@@ -74,7 +74,7 @@ eat: it was a [hobbit-hole](Sample_document/assets/Hobbit.md), and that means co
       
 
 
-<img src="Sample_document/assets/images/Shiprock.png" style="float: left; margin-right: 10px;"  raw=true />
+<img src="Sample_Document/assets/images/Shiprock.png" style="float: left; margin-right: 10px;"  raw=true />
 
 
 This <em>word</em> is italic.
