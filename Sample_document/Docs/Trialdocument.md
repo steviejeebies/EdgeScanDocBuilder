@@ -70,11 +70,11 @@ To see the possibility, the certainty, of ruin, even at the moment of creation: 
 
 In a hole in the ground there lived a hobbit. Not a nasty, dirty, wet hole, filled with the ends
 of worms and an oozy smell, nor yet a dry, bare, sandy hole with nothing in it to sit down on or to
-eat: it was a [hobbit-hole](Sample_document/assets/Hobbit.md), and that means comfort.
+eat: it was a [hobbit-hole](assets/Hobbit.md), and that means comfort.
       
 
 
-<img src="Sample_Document/assets/images/Shiprock.png" style="float: left; margin-right: 10px;"  raw=true />
+<img src="assets/images/Shiprock.png" style="float: left; margin-right: 10px;"  raw=true />
 
 
 This <em>word</em> is italic.
