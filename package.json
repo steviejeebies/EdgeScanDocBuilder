@@ -1,0 +1,34 @@
+{
+  "name": "edgeScanDocBuilder",
+  "version": "1.0.0",
+  "description": "A build script to take documentation written in markdown stored within a git\r repository and render it to various output formats.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/steviejeebies/EdgeScanDocBuilder.git"
+  },
+  "keywords": [],
+  "author": "Stephen Rowe <rowes@tcd.ie> (none)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/steviejeebies/EdgeScanDocBuilder/issues"
+  },
+  "homepage": "https://github.com/steviejeebies/EdgeScanDocBuilder#readme",
+  "dependencies": {
+    "glob": "^7.1.6",
+    "md-to-pdf": "^3.3.1",
+    "node-fetch": "^2.6.1",
+    "yargs": "^16.2.0"
+  },
+  "devDependencies": {
+    "eslint": "^7.20.0",
+    "eslint-config-strongloop": "^2.1.0"
+  },
+  "bin": {
+    "docbuild": "index.js"
+  }
+}
