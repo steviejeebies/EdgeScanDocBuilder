@@ -1,5 +1,5 @@
 {
-  "name": "EdgeScanDocBuilder",
+  "name": "edgeScanDocBuilder",
   "version": "1.0.0",
   "description": "A build script to take documentation written in markdown stored within a git\r repository and render it to various output formats.",
   "main": "index.js",

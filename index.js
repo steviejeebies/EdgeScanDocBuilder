@@ -69,7 +69,6 @@ const argv = yargs
     },
     // TODO: complete this set of options
   })
-
   .help()
   .alias('help', 'h')
   .showHelpOnFail()
@@ -86,5 +85,5 @@ if (argv.freshdesk) {
   require('./app/freshdesk');
 }
 if(argv._.includes('html')) {
-  //require('./app/html');
+  require('./app/html');
 }
