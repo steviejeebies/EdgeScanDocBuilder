@@ -15,9 +15,6 @@ let targetFiles = glob.sync(`${fileDirectory}/**/*.md`);
 // should store html version in fileDirectory/[relativePath], 
 // with an as-of-yet uncreated css file
 targetFiles.reverse().forEach(inputFile => {
-    console.log('pandoc -s -c ' + css + ' '
-    + inputFile + ' -o '
-    + inputFile + '.html');
   exec('pandoc -s -c ' + css + ' '
         + inputFile + ' -o '
         + inputFile + '.html')}
