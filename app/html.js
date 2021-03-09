@@ -1,4 +1,4 @@
-// NOT TESTED! Probably doesn't need to be it's 
+// NOT TESTED! Probably doesn't need to be it's
 // own file, but it will be while I try to make it work
 // const path = require('path');
 'use strict';
@@ -12,11 +12,15 @@ const fileDirectory = process.cwd();
 // for all files
 let targetFiles = glob.sync(`${fileDirectory}/**/*.md`);
 
-// should store html version in fileDirectory/[relativePath], 
+// should store html version in fileDirectory/[relativePath],
 // with an as-of-yet uncreated css file
-targetFiles.reverse().forEach(inputFile => {
-  exec('pandoc -s -c ' + css + ' '
-        + inputFile + ' -o '
-        + inputFile + '.html')}
-);
-
+targetFiles.forEach(inputFile => {
+  exec(`pandoc -s -c ${css} "${inputFile}" -o "${inputFile}.html"`,
+    (error, stdout, stderr) => {
+      if (error) {
+        console.error(error);
+        return;
+      }
+      console.log(stdout);
+    });
+});

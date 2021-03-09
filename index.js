@@ -79,11 +79,10 @@ const argv = yargs
 
 if (argv.pdf) {
   require('./app/pdf');
-  // console.log('PDF mode running');
 }
 if (argv.freshdesk) {
   require('./app/freshdesk');
 }
-if(argv._.includes('html')) {
+if (argv.html) {
   require('./app/html');
 }
