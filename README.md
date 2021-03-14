@@ -15,7 +15,7 @@ The formats it (will) support are:
 
 ### Required
 * NodeJS
-* 
+
 #### Enviornment Variables
 DocBuild requires 2 enviornment variables to be set on your local machine:
 * **FRESHDESK_TOKEN** (See [FreshDesk's  support page](https://support.freshdesk.com/support/solutions/articles/215517-how-to-find-your-api-key))
