@@ -13,7 +13,7 @@ The formats it (will) support are:
 
 ### Installation
 
-### Required
+## Required
 * NodeJS
 
 #### Enviornment Variables
