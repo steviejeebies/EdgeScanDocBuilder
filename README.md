@@ -1,8 +1,7 @@
 
 # EdgeScanDocBuilder
 
-### Required
-* NodeJS
+
 
 ### Description
 A build script to take documentation written in markdown stored within a git
@@ -13,6 +12,10 @@ The formats it (will) support are:
 * HTML for uploading to Freshdesk
 
 ### Installation
+
+### Required
+* NodeJS
+* 
 #### Enviornment Variables
 DocBuild requires 2 enviornment variables to be set on your local machine:
 * **FRESHDESK_TOKEN** (See [FreshDesk's  support page](https://support.freshdesk.com/support/solutions/articles/215517-how-to-find-your-api-key))
