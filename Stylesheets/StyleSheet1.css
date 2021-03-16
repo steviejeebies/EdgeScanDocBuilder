@@ -1,0 +1,114 @@
+*{
+	box-sizing: border-box;
+}
+
+html
+{
+	font-size: 100%;
+	overflow-y: scroll;
+	overflow-x:scroll;
+	border:2px solid black;
+	word-wrap: auto;
+}
+
+body{
+	background-color: #fefefe;
+	padding:2px;
+	line-height: 1.7 px;
+	font-family: "Times New Roman", Times, serif ;
+
+}
+
+h1{
+	padding: 5px;
+	font-size: 2.5em;
+	font-color:#737373;
+}
+
+h2{
+    padding: 5px;
+	font-size: 2em;
+	font-color:#666666;
+}
+
+h3,h4,h5,h6{
+	padding: 5px;
+}
+
+ul{
+	padding:20px;
+	font-weight: 400;
+	text-transform: uppercase;
+}
+
+ol
+{
+	padding:30px;
+	font-weight: 200;
+	font-color:red;
+	font-style: underline;
+}
+
+blockquote{
+	margin:30px;
+	font-style: italic;
+	font-size: 30px;
+}
+
+table{
+	table-layout:fixed;
+	width:100%;
+	text-align: center;
+	border-collapse: collapse;
+	padding:2px;
+	border:solid 2px black;
+	word-wrap: auto;
+	word-break: auto;
+}
+
+table th,
+table td {
+	padding: 2px ;
+	border: 2px solid black;
+    border-collapse: collapse;
+    word-wrap: auto;
+	word-break: auto;
+}
+
+table th {
+	padding: 2px ;
+    text-align: center;
+	font-weight: 600;
+	border:solid 3px black;
+    border-collapse:collapse;
+     word-wrap: break-word;
+}
+
+table tr {
+    padding: 2px ;
+	background-color: white;
+	border:solid 2px black;
+	border-collapse: collapse;
+	 word-wrap: break-word;
+}
+
+img{
+  max-width: 500px;
+  max-height: 500px;
+  border: 5px solid black;
+
+}
+
+a{
+  color: green;
+  font-style: italic;
+}
+
+p{
+ margin:5px;
+}
+
+pre code {
+	display: block;
+	padding: 0.5em;
+}

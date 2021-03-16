@@ -1,0 +1,103 @@
+
+html{
+	font-size: 100%;
+	overflow-y: scroll;
+	overflow-x:scroll;
+	word-wrap: auto;
+	background-color:black;
+	color: white;
+}
+body{
+	line-height: 1.7 px;
+	font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell',
+		'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif; 
+	padding:4px;
+}
+
+h1{
+   color:#a7d129;
+   margin:10px;
+}
+h2{
+   color:#21e6c1;
+   margin:12px;
+}
+h3{
+  color:#278ea5;
+  margin:15px;
+}
+h4{
+ color:#1f4287;
+  margin:16px;
+}
+h5{
+ color:#cdc733;
+  margin:17px;
+}
+h6{
+ color:#ff7171;
+  margin:18px;
+}
+
+ol,ul{
+	padding :20px;
+	text-transform: capitalize; 
+}
+
+li
+{
+	color:#ff005c;
+	margin-left:30px;
+}
+table{
+	border: 2px solid white;
+	padding:3px;
+	word-wrap: break-word;
+	border-collapse: collapse;
+	table-layout:fixed;
+	width:100%;
+
+}
+td{
+	color:#f25287;
+	word-wrap:break-word;
+	padding:2px;
+	border: 2px solid white;
+
+}
+tr{
+	color:#f25287;
+	word-wrap:break-word;
+	padding:2px;
+	border: 2px solid white;
+
+}
+th{
+	color:white;
+	word-wrap:break-word;
+	padding:2px;
+	border: 2px solid white;
+	background-color:#6ddccf;
+}
+a{
+	text-decoration: none;
+	color:#caf7e3;
+}
+
+img{
+   max-height: 500px;
+   max-width: 500px;
+   padding:20px;
+}
+
+pre code {
+	display: block;
+	padding: 0.5em;
+}
+
+blockquote {
+    border: none;
+    padding-left: 0;
+}
+
+
