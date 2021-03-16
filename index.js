@@ -22,10 +22,10 @@ const argv = yargs
     alias: 'v',
     type: 'boolean',
   })
- .option('stylesheet', {
+  .option('stylesheet', {
     description: 'Provide the stylesheet for the markdown document',
-     default: './StyleSheet1.css',
-     type: 'string',
+    default: './StyleSheet1.css',
+    type: 'string',
   })
 
   // Freshdesk related options
