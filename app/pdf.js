@@ -15,7 +15,7 @@ const outputOptions = {
   css: '',
 
   // extra options to pass to marked (the .md to .html renderer)
-   marked_options: {},
+  marked_options: {},
 
   // options to be passed to puppeteer's pdf renderer
   pdf_options: {
