@@ -8,14 +8,14 @@ const glob = require('glob');
 // for full md-to-pdf config options see:
 // https://github.com/simonhaenisch/md-to-pdf/blob/master/src/lib/config.ts
 const outputOptions = {
-  // array of paths to stylesheets
-  /* stylesheet: [], */
+  /// array of paths to stylesheets
+  stylesheet:[path.resolve('./StyleSheets/Stylesheet2.css')], 
 
   // string of extra css properties
   css: '',
 
   // extra options to pass to marked (the .md to .html renderer)
-  marked_options: {},
+   marked_options: {},
 
   // options to be passed to puppeteer's pdf renderer
   pdf_options: {
