@@ -9,7 +9,7 @@ const glob = require('glob');
 // https://github.com/simonhaenisch/md-to-pdf/blob/master/src/lib/config.ts
 const outputOptions = {
   // array of paths to stylesheets
-  stylesheet:[path.resolve('./StyleSheets/Stylesheet2.css')], 
+  //stylesheet:[path.resolve('./StyleSheets/Stylesheet2.css')], 
 
   // string of extra css properties
   css: '',
