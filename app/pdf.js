@@ -8,7 +8,7 @@ const glob = require('glob');
 // for full md-to-pdf config options see:
 // https://github.com/simonhaenisch/md-to-pdf/blob/master/src/lib/config.ts
 const outputOptions = {
-  /// array of paths to stylesheets
+  // array of paths to stylesheets
   stylesheet:[path.resolve('./StyleSheets/Stylesheet2.css')], 
 
   // string of extra css properties
