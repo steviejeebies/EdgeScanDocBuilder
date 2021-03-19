@@ -67,13 +67,30 @@ const argv = yargs
       description: 'Renders documents to PDF format',
       type: 'boolean',
     },
-    'pdf-destination': {
+    pdf_destination: {
       description: 'The folder to store the generated PDFs',
-      default: './build',
+      default: './pdf',
       type: 'string',
     },
     // TODO: complete this set of options
   })
+  .group(
+    ['pdf', 'pdf_destination'],
+    'PDF:')
+  .options({
+    html: {
+      description: 'Test command during development, produces HTML files only',
+      type: 'boolean',
+    },
+    html_destination: {
+      description: 'The folder to store the generated HTML',
+      default: './html',
+      type: 'string',
+    },
+  })
+  .group(
+    ['html', 'html_destination'],
+    'HTML:')
   .help()
   .alias('help', 'h')
   .showHelpOnFail()
@@ -83,12 +100,13 @@ const argv = yargs
   .argv;
 
 if (argv.pdf) {
-  require('./app/pdf');
+  let pdf = require('./app/pdf');
+  pdf.docbuildPDF(argv);
 }
 if (argv.freshdesk) {
   require('./app/freshdesk');
 }
 if (argv.html) {
-  require('./app/html');
+  let html = require('./app/html');
+  html.docbuildHTML(argv);
 }
-

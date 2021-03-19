@@ -1,3 +1,9 @@
+# Ignoring output files from docbuild
+sample_documents/ideal_sample_docs/pdf
+sample_documents/ideal_sample_docs/html
+sample_documents/old_docs/pdf
+sample_documents/old_docs/html
+
 # Logs
 logs
 *.log
