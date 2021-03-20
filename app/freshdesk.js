@@ -149,10 +149,9 @@ async function getFreshDeskStructureID(apiEndPoint, content) {
       structuresFound =>
         structuresFound.find(struct => struct.name === content.name))
     .then(result => {
-      if (result === undefined) { 
-        return makeFreshDeskStructure(apiEndPoint, content); 
-      }
-      else return result.id;
+      if (result === undefined) {
+        return makeFreshDeskStructure(apiEndPoint, content);
+      } else return result.id;
     });
 }
 
