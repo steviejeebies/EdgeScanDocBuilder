@@ -83,7 +83,7 @@ async function apiCallFreshDesk(method, url, apiKey, content = undefined) {
 
   return fetch(url, options)
     .then(response => response.text())
-    .then(text => {return JSON.parse(text); });
+    .then(text => { return JSON.parse(text); });
 }
 
 /* makeArticle posts HTML formatted to a string to users endpoint */
@@ -159,13 +159,15 @@ async function getCategoryID(documentName) {
   return apiCallFreshDesk('GET', categoriesAPIEndPoint, apiKey)
     .then(categories => categories.find(item => item.name === documentName))
     .then(result => {
-      if (result === undefined) return makeCategory(documentName);
+      if (result === undefined) { return makeCategory(documentName); }
       else return result.id;
     });
 }
 
-function makeCategory(documentName) {
-  return 123;
+async function makeCategory(documentName) {
+  return apiCallFreshDesk(
+    'POST', categoriesAPIEndPoint, apiKey, { name: documentName })
+    .then((result) => { return result.id; });
 }
 
-outer('this name does not exist');
+outer('from the bottom');
