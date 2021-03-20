@@ -4,7 +4,7 @@ module.exports = {
   uploadFiles: uploadFiles,
 };
 
-const glob = require('glob');
+// const glob = require('glob');
 const fetch = require('node-fetch');
 const fs = require('fs');
 
@@ -162,6 +162,7 @@ async function makeFreshDeskStructure(apiEndPoint, content) {
 // of feeding one output into an input will be how we will
 // used similarly anyway
 
+// eslint-disable-next-line no-unused-vars
 async function outer(documentName, folderName) {
   let categoryID =
     await getFreshDeskStructureID(
@@ -176,7 +177,11 @@ async function outer(documentName, folderName) {
   articleUpload(folderID, testHTML);
 }
 
-//outer('here is a category', 'here is a folder');
+// outer('here is a category', 'here is a folder');
+
+// This function is similar to outer(), but we will actually
+// be using it. At this point, it's only started, doesn't do
+// anything useful yet.
 
 async function uploadFiles(argv) {
   readBackUpFile(argv.source);
@@ -197,7 +202,8 @@ async function uploadFiles(argv) {
     categoryID = await getFreshDeskStructureID(
       categoryAPIEndPoint, categoryPOSTContent(categoryName));
     // If the category name was invalid for our history, then we
-    // have to create a new 
+    // have to create a new
+    console.log(categoryID);
   }
 
 }
@@ -220,8 +226,7 @@ function readBackUpFile(docFolder) {
       // if file does not exist, we make an empty file
       fs.writeFileSync(docFolder + '/.docbuild.json', '');
       docHistoryInfo = {};
-    }
-    else {
+    } else {
       docHistoryInfo = JSON.parse(data);
       console.log(docHistoryInfo);
     }
