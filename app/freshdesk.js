@@ -1,6 +1,12 @@
 'use strict';
 
+module.exports = {
+  uploadFiles: uploadFiles,
+};
+
+const glob = require('glob');
 const fetch = require('node-fetch');
+const fs = require('fs');
 
 if (!process.env.FRESHDESK_TOKEN || !process.env.FRESHDESK_HELPDESK_NAME) {
   throw new Error(`The environment variables FRESHDESK_TOKEN and
@@ -88,11 +94,11 @@ async function apiCallFreshDesk(method, url, content = undefined) {
 
 /* makeArticle posts HTML formatted to a string to users endpoint */
 // eslint-disable-next-line no-unused-vars
-function articleUpload(folderID, content) {
+function articleUpload(method, folderID, content) {
   let articleUploadURL = articleInFolderAPIEndPoint(folderID);
 
   const options = {
-    method: 'POST',
+    method: method,
     body: JSON.stringify(content),
     headers: authorizationHeader,
   };
@@ -113,7 +119,7 @@ let testHTML = {
     This piece of test data is to ensure content can be uploaded to freshdesk
     successfully
 
-  Here is a link to the
+  THIS IS UPDATED CONTENT
   <a href="https://developer.freshdesk.com/api/#solutions">freshdesk docs</a>`,
   status: 1,
 };
@@ -163,7 +169,7 @@ async function makeFreshDeskStructure(apiEndPoint, content) {
 
 // this is currently just a test function, but it's purpose
 // of feeding one output into an input will be how we will
-// achieve this anyway
+// used similarly anyway
 
 async function outer(documentName, folderName) {
   let categoryID =
@@ -179,5 +185,35 @@ async function outer(documentName, folderName) {
   articleUpload(folderID, testHTML);
 }
 
-outer('here is a category', 'here is a folder');
+//outer('here is a category', 'here is a folder');
+
+async function uploadFiles(argv) {
+  readBackUpFile(argv.source);
+}
+
+let docInfo; // global in file
+
+// Lets say we have a doc/chapter/section folder hierarchy. We've already
+// uploaded this to FreshDesk, which means that the category,
+// folder and article already exist. We don't need to check
+// if the category/folder/article exists with sequential GET
+// requests, because that would be a waste of time. So what we'll
+// do is store a '.docbuild.json' file in the folder. This will
+// save the name + id of the category, the name + id of all the
+// folders, and the name + id of all the articles. This means
+// that we will PUT (update) instead of POST (create new) for each
+// of these.
+function readBackUpFile(docFolder) {
+  fs.readFile(docFolder + '/.docbuild.json', (err, data) => {
+    if (err) {
+      // if file does not exist, we make an empty file
+      fs.writeFileSync(docFolder + '/.docbuild.json', '');
+      docInfo = {};
+    }
+    else {
+      docInfo = JSON.parse(data);
+      console.log(docInfo);
+    }
+  });
+}
 
