@@ -104,7 +104,8 @@ if (argv.pdf) {
   pdf.docbuildPDF(argv);
 }
 if (argv.freshdesk) {
-  require('./app/freshdesk');
+  let freshdesk = require('./app/freshdesk');
+  freshdesk.uploadFiles(argv);
 }
 if (argv.html) {
   let html = require('./app/html');
