@@ -11,10 +11,10 @@ const apiKey = process.env.FRESHDESK_TOKEN;
 const helpdeskName = process.env.FRESHDESK_HELPDESK_NAME;
 
 const authorizationHeader =
-  {
-    Authorization: Buffer.from(`${apiKey}:nopass`).toString('base64'),
-    'Content-Type': 'application/json',
-  }
+{
+  Authorization: Buffer.from(`${apiKey}:nopass`).toString('base64'),
+  'Content-Type': 'application/json',
+}
 
 const baseUrl = `https://${helpdeskName}.freshdesk.com`;
 
@@ -91,8 +91,8 @@ async function apiCallFreshDesk(method, url, apiKey, content = undefined) {
 function makeArticle(method, baseUrl, apiKey, folderID, content) {
 
   let url =
-      baseUrl + '/api/v2/solutions/folders/'
-      + folderID.toString() + '/articles';
+    baseUrl + '/api/v2/solutions/folders/'
+    + folderID.toString() + '/articles';
 
   const options = {
     method: method,
@@ -151,22 +151,22 @@ let content = {
 // for the moment
 
 async function outer(documentName) {
-  let id = await getCategoryID(documentName);
+  let id = await getFreshDeskStructureID(documentName, categoriesAPIEndPoint);
   console.log('SUCCESS: ' + id);
 }
 
-async function getCategoryID(documentName) {
-  return apiCallFreshDesk('GET', categoriesAPIEndPoint, apiKey)
+async function getFreshDeskStructureID(documentName, apiEndPoint) {
+  return apiCallFreshDesk('GET', apiEndPoint, apiKey)
     .then(categories => categories.find(item => item.name === documentName))
     .then(result => {
-      if (result === undefined) { return makeCategory(documentName); }
+      if (result === undefined) { return makeFreshDeskStructure(documentName); }
       else return result.id;
     });
 }
 
-async function makeCategory(documentName) {
+async function makeFreshDeskStructure(documentName, apiEndPoint) {
   return apiCallFreshDesk(
-    'POST', categoriesAPIEndPoint, apiKey, { name: documentName })
+    'POST', apiEndPoint, apiKey, { name: documentName })
     .then((result) => { return result.id; });
 }
 
