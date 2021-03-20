@@ -138,16 +138,7 @@ let testHTML = {
 
 // FRESH DESK API CALLS
 
-// The first method I'm going to make is one which takes the name of the
-// Document the user wants to make. This will likely be the name of the
-// top level directory (i.e. document_name/chapter_name/section_name). We
-// want to know if this Category already exists on the user's FreshDesk
-// portal. If it DOESN'T, we create a category for it, and work from there.
-// If it DOES, then we need to get it's ID, and update whatever we need to
-// update inside. It might be worth thinking in future about how we could
-// save ID-stuff locally in the doc folder so that we don't constantly have
-// to check if Category/Folders are on FreshDesk, but we'll put that aside
-// for the moment
+// 'Structure' means either 'FreshDesk Category' or 'FreshDesk Folder'
 
 async function getFreshDeskStructureID(apiEndPoint, content) {
   return apiCallFreshDesk('GET', apiEndPoint)
@@ -189,9 +180,29 @@ async function outer(documentName, folderName) {
 
 async function uploadFiles(argv) {
   readBackUpFile(argv.source);
+
+  let parts = argv.source.split('/');
+  let categoryName;
+  let categoryID;
+
+  // if the user has passed a directory like ./docs, then we want
+  // 'docs'. If the user passes in './docs/', then we still want
+  // to recognise this as docs.
+  if (parts[parts.length - 1] === '') categoryName = parts[parts.length - 2];
+  else categoryName = parts[parts.length - 2];
+
+  if (docHistoryInfo.categoryName === categoryName)
+    categoryID = docHistoryInfo.categoryID;
+  else {
+    categoryID = await getFreshDeskStructureID(
+      categoryAPIEndPoint, categoryPOSTContent(categoryName));
+    // If the category name was invalid for our history, then we
+    // have to create a new 
+  }
+
 }
 
-let docInfo; // global in file
+let docHistoryInfo; // global in file
 
 // Lets say we have a doc/chapter/section folder hierarchy. We've already
 // uploaded this to FreshDesk, which means that the category,
@@ -208,11 +219,11 @@ function readBackUpFile(docFolder) {
     if (err) {
       // if file does not exist, we make an empty file
       fs.writeFileSync(docFolder + '/.docbuild.json', '');
-      docInfo = {};
+      docHistoryInfo = {};
     }
     else {
-      docInfo = JSON.parse(data);
-      console.log(docInfo);
+      docHistoryInfo = JSON.parse(data);
+      console.log(docHistoryInfo);
     }
   });
 }
