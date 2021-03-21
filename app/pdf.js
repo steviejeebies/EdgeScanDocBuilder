@@ -44,39 +44,42 @@ function docbuildPDF(argv) {
   }
 
   let targetFiles = glob.sync(`${inputDir}/**/*.md`);
-
+  let finalFilePath = path.join(outputDir, 'MERGED.pdf');
   // FIXME: literally no idea why this won't work forwards
   // Stephen: I removed .reverse(), but `docbuild --pdf` needs to be called
   // in the sample_documents folder (i.e the directory that contains the
   // docs/ folder)
-  targetFiles.reverse().forEach(inputFile => {
+  var promise = new Promise((resolve, reject) => {
+    var index = 0;
+    targetFiles.reverse().forEach(inputFile => {
     // same name as the input file, and places it in the `build` directory
-    let baseName = path.basename(inputFile, path.extname(inputFile));
+      let baseName = path.basename(inputFile, path.extname(inputFile));
 
-    console.log('BASE NAME: ' + baseName.toUpperCase());
-    let pdfFilePath = path.join(outputDir, baseName + '.pdf');
+      console.log('BASE NAME: ' + baseName.toUpperCase());
+      let pdfFilePath = path.join(outputDir, baseName + '.pdf');
 
-    mdToPdf({ path: inputFile }, outputOptions)
-      .then(data => fs.writeFileSync(pdfFilePath, data.content))
-      .then(() => console.log(`${path.basename(pdfFilePath)} created!`))
-      .catch(console.error);
+      mdToPdf({ path: inputFile }, outputOptions)
+        .then(data => fs.writeFileSync(pdfFilePath, data.content))
+        .then(() => console.log(`${path.basename(pdfFilePath)} created!`))
+        .then(() => index++)
+        .then(() => (index === targetFiles.length) ? resolve() : null)
+        .catch(console.error);
+    });
   });
-  let finalFilePath = path.join(outputDir, 'MERGED.pdf');
-  //  This final file name could be anything ^
-  let pdfFiles = glob.sync(`${outputDir}/*.pdf`);
-  console.log('PATH : ', finalFilePath, 'FILES : ', pdfFiles);
-  finalMerge(pdfFiles, finalFilePath);
+  promise.then(() => {
+    let pdfFiles = glob.sync(`${outputDir}/*.pdf`);
+    finalMerge(pdfFiles, finalFilePath);
+    console.log('Merged');
+  });
 }
 
 //  Separate function for final merge, the library used only works with async
 //  functions, but works well otherwise. This does make links tricky again.
 async function finalMerge(source_files, dest_file_path){
   const merge = require('easy-pdf-merge');
-
   merge(source_files, dest_file_path, function(err) {
     if (err) {
       return console.log(err);
     }
-    console.log('Success');
   });
 }
