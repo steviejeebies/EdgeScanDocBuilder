@@ -37,6 +37,10 @@
 <html>
 ```
 
+### An image
+![Shiprock](1_formatting_test_section/Shiprock.png)
+
+
 # General Usage
 
 The table below gives an overview of the possible actions available for an API endpoint.
