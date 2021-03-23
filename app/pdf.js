@@ -1,21 +1,26 @@
 'use strict';
 
-// required to pass command line arguments from index.js
-module.exports = {
-  docbuildPDF: docbuildPDF,
-};
 
-function docbuildPDF(argv) {
-  const { mdToPdf } = require('md-to-pdf');
-  const path = require('path');
-  const fs = require('fs');
-  const glob = require('glob');
+const { mdToPdf } = require('md-to-pdf');
+const path = require('path');
+const fs = require('fs');
+const glob = require('glob');
+
+
+async function docbuildPDF(argv) {
+  let inputDir = argv.source;
+  let outputDir = argv.pdf_destination;
+  let templatesDir = path.join(__dirname, 'resources');
 
   // for full md-to-pdf config options see:
   // https://github.com/simonhaenisch/md-to-pdf/blob/master/src/lib/config.ts
   const outputOptions = {
+    basedir: inputDir,
+
     // array of paths to stylesheets
-    // stylesheet:[path.resolve('./StyleSheets/Stylesheet2.css')],
+    // default is to use md-to-pdf provided one
+    // FIXME: even an empty stylesheet property is overriding the default one
+    // stylesheet: (argv.stylesheet) ? [argv.stylesheet] : undefined,
 
     // string of extra css properties
     css: '',
@@ -33,53 +38,40 @@ function docbuildPDF(argv) {
         bottom: '30mm',
         left: '20mm',
       },
+      displayHeaderFooter: true,
+      headerTemplate: fs.readFileSync(`${templatesDir}/header.html`, 'utf-8'),
+      footerTemplate: fs.readFileSync(`${templatesDir}/footer.html`, 'utf-8'),
     },
   };
-
-  let inputDir = argv.source;
-  let outputDir = argv.pdf_destination;
 
   if (!fs.existsSync(outputDir)) {
     fs.mkdirSync(outputDir);
   }
 
   let targetFiles = glob.sync(`${inputDir}/**/*.md`);
-  let finalFilePath = path.join(outputDir, 'MERGED.pdf');
-  // FIXME: literally no idea why this won't work forwards
-  // Stephen: I removed .reverse(), but `docbuild --pdf` needs to be called
-  // in the sample_documents folder (i.e the directory that contains the
-  // docs/ folder)
-  var promise = new Promise((resolve, reject) => {
-    var index = 0;
-    targetFiles.reverse().forEach(inputFile => {
-    // same name as the input file, and places it in the `build` directory
-      let baseName = path.basename(inputFile, path.extname(inputFile));
 
-      console.log('BASE NAME: ' + baseName.toUpperCase());
-      let pdfFilePath = path.join(outputDir, baseName + '.pdf');
+  // TODO: make title configurable
+  let groupedInput = '# Documentation Bundle';
+  targetFiles.forEach(inputFile => {
+    let trimmedPath = path.relative(inputDir, inputFile);
+    console.log(`${trimmedPath} found, adding to PDF...`);
 
-      mdToPdf({ path: inputFile }, outputOptions)
-        .then(data => fs.writeFileSync(pdfFilePath, data.content))
-        .then(() => console.log(`${path.basename(pdfFilePath)} created!`))
-        .then(() => index++)
-        .then(() => (index === targetFiles.length) ? resolve() : null)
-        .catch(console.error);
-    });
+    // break from the previous page...
+    groupedInput += '<br><div style="page-break-after:always;"></div>\n';
+    // ...then append the contents of the file
+    groupedInput += fs.readFileSync(inputFile, 'utf-8');
   });
-  promise.then(() => {
-    let pdfFiles = glob.sync(`${outputDir}/*.pdf`);
-    finalMerge(pdfFiles, finalFilePath);
-    console.log('Merged');
-  });
+
+  // TODO: separate PDFs for sections?
+  let pdfFilePath = path.join(outputDir, 'documentation.pdf');
+
+  mdToPdf({ content: groupedInput }, outputOptions)
+    .then(data => fs.writeFileSync(pdfFilePath, data.content))
+    .then(() => console.log(`Final PDF ${path.basename(pdfFilePath)} created!`))
+    .catch(console.error);
 }
 
-//  Separate function for final merge, the library used only works with async
-//  functions, but works well otherwise. This does make links tricky again.
-async function finalMerge(source_files, dest_file_path){
-  const merge = require('easy-pdf-merge');
-  merge(source_files, dest_file_path, function(err) {
-    if (err) {
-      return console.log(err);
-    }
-  });
-}
+// allow resources to be accessed from outside this module
+module.exports = {
+  docbuildPDF,
+};
