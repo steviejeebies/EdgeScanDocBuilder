@@ -17,11 +17,6 @@ async function docbuildPDF() {
   const outputOptions = {
     basedir: inputDir,
 
-    // array of paths to stylesheets
-    // default is to use md-to-pdf provided one
-    // FIXME: even an empty stylesheet property is overriding the default one
-    // stylesheet: (argv.stylesheet) ? [argv.stylesheet] : undefined,
-
     // string of extra css properties
     css: '',
 
@@ -44,6 +39,12 @@ async function docbuildPDF() {
     },
   };
 
+  // add any stylesheets in a way that it doesn't override the default one when
+  // none are explicitly passed to docbuild
+  if (argv.stylesheet !== undefined) {
+    outputOptions.stylesheet = [argv.stylesheet];
+  }
+
   if (!fs.existsSync(outputDir)) {
     fs.mkdirSync(outputDir);
   }
@@ -62,7 +63,6 @@ async function docbuildPDF() {
     groupedInput += fs.readFileSync(inputFile, 'utf-8');
   });
 
-  // TODO: separate PDFs for sections?
   let pdfFilePath = path.join(outputDir, 'documentation.pdf');
 
   mdToPdf({ content: groupedInput }, outputOptions)
