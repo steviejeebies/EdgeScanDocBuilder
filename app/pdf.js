@@ -57,6 +57,8 @@ async function docbuildPDF() {
     let trimmedPath = path.relative(inputDir, inputFile);
     console.log(`${trimmedPath} found, adding to PDF...`);
 
+    // FIXME: linking to other markdown files is broken
+
     // break from the previous page...
     groupedInput += '<br><div style="page-break-after:always;"></div>\n';
     // ...then append the contents of the file
