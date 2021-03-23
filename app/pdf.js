@@ -5,9 +5,9 @@ const { mdToPdf } = require('md-to-pdf');
 const path = require('path');
 const fs = require('fs');
 const glob = require('glob');
+const argv = require('./cli');
 
-
-async function docbuildPDF(argv) {
+async function docbuildPDF() {
   let inputDir = argv.source;
   let outputDir = argv.pdf_destination;
   let templatesDir = path.join(__dirname, 'resources');
