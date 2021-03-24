@@ -37,6 +37,10 @@
 <html>
 ```
 
+### An image
+![Shiprock](1_formatting_test_section/Shiprock.png)
+
+
 # General Usage
 
 The table below gives an overview of the possible actions available for an API endpoint.
@@ -67,7 +71,7 @@ To see the possibility, the certainty, of ruin, even at the moment of creation: 
      The estate had been enormous, I was told. It had been created in part by the wealth of empire. But then bit by bit it had been alienated. The family in its many branches flourished in other places. Here in the valley there now lived only my landlord, elderly, a bachelor, with people to look after him. Certain physical disabilities had now been added to the malaise which had befallen him years before, a malaise of which I had no precise knowledge, but interpreted as something like accidia, the monk’s torpor or disease of the Middle Ages – which was how his great security, his excessive worldly blessings, had taken him. The accidia had turned him into a recluse, accessible only to his intimate friends. So that on the manor itself, as on my walks on the down, I had a kind of solitude.
      I felt a great sympathy for my landlord. I felt I could understand his malaise; I saw it as the other side of my own. I did not think of my landlord as a failure. Words like failure and success didn’t apply. Only a grand man or a man with a grand idea of his human worth could ignore the high money value of his estate and be content to live in its semi-ruin. My meditations in the manor were not of imperial decline. Rather, I wondered at the historical chain that had brought us together – he in his house, I in his cottage, the wild garden his taste (as I was told) and also mine.
 
-<img src="./Shiprock.png" style="float: left; margin-right: 10px;"  raw=true />
+<img src="1_formatting_test_section/Shiprock.png" style="float: left; margin-right: 10px;"  raw=true />
 
 
 This <em>word</em> is italic.
