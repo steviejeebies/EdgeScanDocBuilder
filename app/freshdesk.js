@@ -2,10 +2,8 @@
 
 module.exports = {
   uploadFiles,
-  readBackUpFile,
 };
 
-// const glob = require('glob');
 const fetch = require('node-fetch');
 const fs = require('fs');
 const argv = require('./cli');
@@ -96,6 +94,8 @@ async function apiCallFreshDesk(method, url, content = undefined) {
     .then(text => { return JSON.parse(text); });
 }
 
+// The following method is a test method, isn't used at the moment
+
 /* makeArticle posts HTML formatted to a string to users endpoint */
 // eslint-disable-next-line no-unused-vars
 function articleUpload(method, folderID) {
@@ -163,33 +163,64 @@ async function makeFreshDeskStructure(apiEndPoint, content) {
     .then((result) => { return result.id; });
 }
 
-// this is currently just a test function, but it's purpose
-// of feeding one output into an input will be how we will
-// used similarly anyway
+let docHistoryInfo; // our cache file, stores info about FreshDesk IDs
 
-// eslint-disable-next-line no-unused-vars
-async function outer(documentName, folderName) {
-  let categoryID =
-    await getFreshDeskStructureID(
-      categoryAPIEndPoint, categoryPOSTContent(documentName));
-
-  let folderID =
-    await getFreshDeskStructureID(
-      folderInCategoryAPIEndPoint(categoryID), folderPOSTContent(folderName));
-
-  // At this point, Category has been found/made, Folder has been found/made.
-
-  articleUpload(folderID, testHTML);
-}
-
-// outer('here is a category', 'here is a folder');
-
-// This function is similar to outer(), but we will actually
-// be using it. At this point, it's only started, doesn't do
-// anything useful yet.
+/**
+ * This is the main method in freshdesk.js. When passed a directory
+ * (through argv.source), this method will upload the files to FreshDesk
+ * and keep a record of the files/IDs in .docbuild.js
+ */
 
 async function uploadFiles() {
-  readBackUpFile(argv.source);
+
+  // For our documents, we have a folder structure of
+  // document/chapters/markdown-file. But FreshDesk has its own names for
+  // this hierarchy. It's really important you remember this, because the
+  // names can definitely get confusing and I probably used these terms
+  // very interchangeably throughout the code:
+
+  // Our 'Document' Folder == FreshDesk 'Category'
+  // Our 'Chapter' Folder == FreshDesk 'Folder'
+  // Our 'Markdown' Files == FreshDesk 'Article'
+
+  // Login to FreshDesk's website with the details I posted in the group
+  // chat (DM me if you're not sure where to look on the site for the
+  // Solutions page), and you'll see this in action.
+
+  // When you're running 'docbuild --freshdesk', (in our case) you'll be
+  // running it in the terminal in the folder
+  // 'sample_documents/ideal_sample_docs'. In this folder, there is a
+  // folder called 'docs'. This will be the name of our FreshDesk
+  // Category. In the case of PDF, the entirety of what is contained in
+  // the docs folder will be one big PDF, but in the case of HTML, we have
+  // to treat it very differently: we have to convert each MD file into an
+  // individual HTML file, then put it into the right Folder on
+  // FreshDesk.
+
+  // To save time on having to ask FreshDesk "do you have this
+  // folder/file?" over and over and over for stuff that we have already
+  // uploaded, we're using a JSON object called 'docHistoryInfo', which
+  // keeps track of the unique IDs that FreshDesk has assigned our
+  // Categories/Folders/Articles when we originally uploaded them (scroll
+  // down to the bottom of this file, I've written out a comment to show
+  // the structure of this object. Alternatively, if you run 'docbuild
+  // --freshdesk' in one of the sample document folders, then open
+  // '.docbuild.json' file, you'll see a real example). We're going to
+  // write this object to a file called '.docbuild.json' when we're done
+  // everything, which will be saved in the docs folder.
+
+  // The method 'readOrCreateBackUpFile()' reads this file and stores its
+  // contents back into 'docHistoryInfo' whenever we start up this app
+  // again. 'uploadFiles()' is the main method in the FreskDesk.js file.
+  // What it's doing (at the moment) is comparing the current names of
+  // files/folders in our documentation folder with what is in
+  // 'docHistoryInfo' to see if this info already exists on FreshDesk. If
+  // it does, we can just grab the ID values from this object and work for
+  // there. If anything is missing in the Object, then we create an
+  // equivalent structure on FreshDesk through the API, grab the new ID,
+  // and store it in this object.
+
+  readOrCreateBackUpFile(argv.source);
 
   let parts = argv.source.split('/');
   let categoryName;
@@ -198,7 +229,7 @@ async function uploadFiles() {
   // if the user has passed a directory like ./docs, then we want
   // 'docs'. If the user passes in './docs/', then we still want
   // to recognise this as docs.
-  if (parts[parts.length - 1] === '') 
+  if (parts[parts.length - 1] === '')
     categoryName = parts[parts.length - 2].trim();
   else categoryName = parts[parts.length - 1].trim();
 
@@ -211,12 +242,95 @@ async function uploadFiles() {
     // have to create a new
     docHistoryInfo.categoryID = categoryID;
     docHistoryInfo.categoryName = categoryName;
-    console.log(JSON.stringify(docHistoryInfo));
   }
 
+  let chapters = getChapterNamesInDirectory(argv.source);
+
+  if (docHistoryInfo.folders === undefined)
+    docHistoryInfo.folders = [];
+
+  let knownFolders = docHistoryInfo.folders;
+
+  for (const chapter of chapters) {
+    let thisFolder =
+      knownFolders.filter(({folderName}) => folderName === chapter)[0];
+      // getting first index of filter, maybe theres a better function for this
+
+    let folderID;
+
+    if (thisFolder === undefined) {
+      // if no matching folder was found
+      folderID = await getFreshDeskStructureID(
+        folderInCategoryAPIEndPoint(categoryID), folderPOSTContent(chapter));
+
+      knownFolders.push(
+        {folderName: chapter, folderID: folderID});
+      thisFolder = knownFolders[knownFolders.length - 1];
+    } else folderID = thisFolder.folderID;
+
+    let articles = getArticleNamesInDirectory(argv.source + '/' + chapter);
+
+    if (thisFolder.articles === undefined)
+      thisFolder.articles = [];
+
+    let knownArticles = thisFolder.articles;
+
+    for (const article of articles) {
+      let thisArticle =
+        knownArticles.filter(({articleName}) => articleName === article)[0];
+
+      let articleID = 123; // TODO: this is ust a filler value atm
+
+      let fileLastModified = getLastModifiedTime(
+        argv.source + '/' + chapter + '/' + article);
+
+
+      if (thisArticle === undefined) {
+        // if no matching folder was found
+        // convert MD file to HTML and upload new article to FreshDesk
+        // TODO
+        // let articleID = await getFreshDeskStructureID(
+        //   articleInFolderAPIEndPoint(folderID), articlePOSTContent(chapter));
+
+        knownArticles.push(
+          {
+            articleName: article,
+            articleID: articleID,
+            lastModified: fileLastModified,
+          },
+        );
+      } else if (thisArticle.lastModified !== fileLastModified) {
+        // convert MD file to HTML and update version on FreshDesk API
+        // TODO
+
+        thisArticle.lastModified = fileLastModified;
+      }
+
+    }
+  }
+
+  // this will be at the very end of the upload files method,
+  // maybe we can make it its own function to make it cleaner
+  fs.writeFileSync(argv.source + logFileName,
+    JSON.stringify(docHistoryInfo, null, 4));
 }
 
-let docHistoryInfo; // global in file
+const getChapterNamesInDirectory = source =>
+  fs.readdirSync(source, { withFileTypes: true })
+    .filter(dirent => dirent.isDirectory())
+    .map(dirent => dirent.name);
+
+const getArticleNamesInDirectory = source =>
+  fs.readdirSync(source, { withFileTypes: true })
+    .filter(dirent => {
+      return dirent.isFile() && dirent.name.match(/[^\.]*.md/g);
+    })
+    .map(dirent => dirent.name);
+
+const getLastModifiedTime = (path) => {
+  const stats = fs.statSync(path);
+  return stats.mtime;
+};
 
 // Lets say we have a doc/chapter/section folder hierarchy. We've
 // already uploaded this to FreshDesk, which means that the
@@ -232,8 +346,8 @@ let docHistoryInfo; // global in file
 
 // {
 //   categoryName : 'name of our document, same as the name of the doc file',
-//   categoryID : 'a number assigned for this document/category by FreshDesk',
-//   folders : [
+//   categoryID : 'a unique ID assigned for this item by FreshDesk',
+//   folders : [  // array
 //     {
 //       folderName : 'name of chapter folder',
 //       folderID : '...',
@@ -242,13 +356,18 @@ let docHistoryInfo; // global in file
 //           articleName : 'name of MD file',
 //           articleID : '...',
 //           lastModified : 'a timestamp'
-//         }
+//         },
+//         {
+//           articleName : 'name of MD file',
+//           articleID : '...',
+//           lastModified : 'a timestamp'
+//         },
 //       ]
 //     }
 //   ]
 // }
 
-function readBackUpFile(docFolder) {
+function readOrCreateBackUpFile(docFolder) {
   try {
     let data = fs.readFileSync(docFolder + logFileName);
     docHistoryInfo = JSON.parse(data);

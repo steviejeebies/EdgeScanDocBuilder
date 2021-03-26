@@ -1,1 +1,28 @@
-{}
+{
+    "categoryID": 67000367505,
+    "categoryName": "docs",
+    "folders": [
+        {
+            "folderName": "1_formatting_test_section",
+            "folderID": 67000540938,
+            "articles": [
+                {
+                    "articleName": "1_formatting_test_chapter.md",
+                    "articleID": 123,
+                    "lastModified": "2021-03-24T14:49:59.853Z"
+                }
+            ]
+        },
+        {
+            "folderName": "2_linking_test_section",
+            "folderID": 67000540939,
+            "articles": [
+                {
+                    "articleName": "1_linking_test_chapter.md",
+                    "articleID": 123,
+                    "lastModified": "2021-03-26T07:05:46.985Z"
+                }
+            ]
+        }
+    ]
+}
