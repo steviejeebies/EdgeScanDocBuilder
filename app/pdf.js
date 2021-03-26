@@ -18,22 +18,22 @@ async function docbuildPDF() {
 
   renderer.link = (href, title, text) => {
     // const escapedText = text.toLowerCase().replace(/[^\w]+/g, '-');
-    
+
     return `<h3>href = ${href}, title = ${title}, text = ${text}`;
   };
-  
+
   renderer.heading = (text, level) => {
-      const escapedText = text.toLowerCase().replace(/[^\w]+/g, '-');
-      
-      
-      return `
+    const escapedText = text.toLowerCase().replace(/[^\w]+/g, '-');
+
+
+    return `
               <h${level}>
                 <a name="${escapedText}" class="anchor" href="#${escapedText}">
                   <span class="header-link"></span>
                 </a>
                 ${text}
               </h${level}>`;
-    };
+  };
 
   // for full md-to-pdf config options see:
   // https://github.com/simonhaenisch/md-to-pdf/blob/master/src/lib/config.ts
@@ -44,7 +44,7 @@ async function docbuildPDF() {
     css: '',
 
     // extra options to pass to marked (the .md to .html renderer)
-    marked_options: { "renderer" : renderer },
+    marked_options: { renderer: renderer },
 
     // options to be passed to puppeteer's pdf renderer
     pdf_options: {
