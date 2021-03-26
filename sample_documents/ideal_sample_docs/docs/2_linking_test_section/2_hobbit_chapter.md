@@ -1,9 +1,0 @@
-
-### Hobbits
-Hobbits are an imaginary people in the novels of J. R. R. Tolkien. About half average human height, Tolkien presented hobbits as a variety of humanity, or close relatives thereof. Occasionally known as halflings in Tolkien's writings, they live barefooted, and dwell in homely underground houses which have windows, as they are typically built into the sides of hills. Their feet have naturally tough leathery soles (so they don't need shoes) and are covered on top with curly hair.
-
-Hobbits first appeared in the 1937 children's novel The Hobbit, whose titular hobbit is the protagonist Bilbo Baggins, who is thrown into an unexpected adventure involving a dragon. In its sequel, The Lord of the Rings, the hobbits Frodo Baggins, Sam Gamgee, Pippin Took, and Merry Brandybuck are primary characters who all play key roles in fighting to save their world ("Middle-earth") from evil. In The Hobbit, hobbits live together in a small town called Hobbiton, which in The Lord of the Rings is identified as being part of a larger rural region called the Shire, the homeland of the hobbits in the northwest of Middle-earth. They also live in a village called Bree, east of the Shire, where they co-exist with humans.
-
-The origins of the name and idea of "hobbits" have been debated; literary antecedents include Sinclair Lewis's 1922 novel Babbitt, and Edward Wyke Smith's 1927 The Marvellous Land of Snergs. There is a disputed connection with old names for ghostly creatures, which include boggles, hobbits, and hobgoblins. There is a better substantiated one with rabbit, since Bilbo is repeatedly compared to one in The Hobbit; the Tolkien scholar Tom Shippey identifies five parallels between hobbit and rabbit.
-
-Halflings appear as a race in Dungeons & Dragons, the original name hobbits being later avoided for legal reasons. The usage has been taken up by fantasy authors including Terry Brooks, Jack Vance, and Clifford D. Simak.

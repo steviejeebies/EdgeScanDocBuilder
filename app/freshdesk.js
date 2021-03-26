@@ -1,13 +1,15 @@
 'use strict';
 
 module.exports = {
-  uploadFiles: uploadFiles,
+  uploadFiles,
 };
 
 // const glob = require('glob');
 const fetch = require('node-fetch');
 const fs = require('fs');
 const argv = require('./cli');
+
+const logFileName = '/.docbuild.json';
 
 if (!process.env.FRESHDESK_TOKEN || !process.env.FRESHDESK_HELPDESK_NAME) {
   throw new Error(`The environment variables FRESHDESK_TOKEN and
@@ -95,7 +97,8 @@ async function apiCallFreshDesk(method, url, content = undefined) {
 
 /* makeArticle posts HTML formatted to a string to users endpoint */
 // eslint-disable-next-line no-unused-vars
-function articleUpload(method, folderID, content) {
+function articleUpload(method, folderID) {
+  let content = testHTML;
   let articleUploadURL = articleInFolderAPIEndPoint(folderID);
 
   const options = {
@@ -187,27 +190,27 @@ async function outer(documentName, folderName) {
 async function uploadFiles() {
   readBackUpFile(argv.source);
 
-  let parts = argv.source.split('/');
-  let categoryName;
-  let categoryID;
+  // let parts = argv.source.split('/');
+  // let categoryName;
+  // let categoryID;
 
-  // if the user has passed a directory like ./docs, then we want
-  // 'docs'. If the user passes in './docs/', then we still want
-  // to recognise this as docs.
-  if (parts[parts.length - 1] === '') categoryName = parts[parts.length - 2];
-  else categoryName = parts[parts.length - 2];
+  // // if the user has passed a directory like ./docs, then we want
+  // // 'docs'. If the user passes in './docs/', then we still want
+  // // to recognise this as docs.
+  // if (parts[parts.length - 1] === '') categoryName = parts[parts.length - 2];
+  // else categoryName = parts[parts.length - 2];
 
-  console.log('categoryName IS ' + categoryName);
+  // console.log('categoryName IS ' + categoryName);
 
-  if (docHistoryInfo.categoryName === categoryName)
-    categoryID = docHistoryInfo.categoryID;
-  else {
-    categoryID = await getFreshDeskStructureID(
-      categoryAPIEndPoint, categoryPOSTContent(categoryName));
-    // If the category name was invalid for our history, then we
-    // have to create a new
-    console.log(categoryID);
-  }
+  // if (docHistoryInfo.categoryName === categoryName)
+  //   categoryID = docHistoryInfo.categoryID;
+  // else {
+  //   categoryID = await getFreshDeskStructureID(
+  //     categoryAPIEndPoint, categoryPOSTContent(categoryName));
+  //   // If the category name was invalid for our history, then we
+  //   // have to create a new
+  //   console.log(categoryID);
+  // }
 
 }
 
@@ -215,7 +218,8 @@ let docHistoryInfo; // global in file
 
 // Lets say we have a doc/chapter/section folder hierarchy. We've already
 // uploaded this to FreshDesk, which means that the category,
-// folder and article already exist. We don't need to check
+// folder and article already exist, and have been assigned IDs by
+// the FreshDesk API. We don't need to check
 // if the category/folder/article exists with sequential GET
 // requests, because that would be a waste of time. So what we'll
 // do is store a '.docbuild.json' file in the folder. This will
@@ -224,10 +228,11 @@ let docHistoryInfo; // global in file
 // that we will PUT (update) instead of POST (create new) for each
 // of these.
 function readBackUpFile(docFolder) {
-  fs.readFile(docFolder + '/.docbuild.json', (err, data) => {
+  fs.readFile(docFolder + logFileName, (err, data) => {
     if (err) {
       // if file does not exist, we make an empty file
-      fs.writeFileSync(docFolder + '/.docbuild.json', '');
+      fs.writeFileSync(
+        docFolder + logFileName, JSON.stringify({}, null, 4));
       docHistoryInfo = {};
     } else {
       docHistoryInfo = JSON.parse(data);
