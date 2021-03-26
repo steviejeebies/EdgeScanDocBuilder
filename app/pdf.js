@@ -7,10 +7,33 @@ const fs = require('fs');
 const glob = require('glob');
 const argv = require('./cli');
 
+const marked = require('marked');
+
 async function docbuildPDF() {
   let inputDir = argv.source;
   let outputDir = argv.pdf_destination;
   let templatesDir = path.join(__dirname, 'resources');
+
+  const renderer = new marked.Renderer();
+
+  renderer.link = (href, title, text) => {
+    // const escapedText = text.toLowerCase().replace(/[^\w]+/g, '-');
+    
+    return `<h3>href = ${href}, title = ${title}, text = ${text}`;
+  };
+  
+  renderer.heading = (text, level) => {
+      const escapedText = text.toLowerCase().replace(/[^\w]+/g, '-');
+      
+      
+      return `
+              <h${level}>
+                <a name="${escapedText}" class="anchor" href="#${escapedText}">
+                  <span class="header-link"></span>
+                </a>
+                ${text}
+              </h${level}>`;
+    };
 
   // for full md-to-pdf config options see:
   // https://github.com/simonhaenisch/md-to-pdf/blob/master/src/lib/config.ts
@@ -21,7 +44,7 @@ async function docbuildPDF() {
     css: '',
 
     // extra options to pass to marked (the .md to .html renderer)
-    marked_options: {},
+    marked_options: { "renderer" : renderer },
 
     // options to be passed to puppeteer's pdf renderer
     pdf_options: {

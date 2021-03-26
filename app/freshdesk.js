@@ -197,6 +197,8 @@ async function uploadFiles() {
   if (parts[parts.length - 1] === '') categoryName = parts[parts.length - 2];
   else categoryName = parts[parts.length - 2];
 
+  console.log("categoryName IS " + categoryName);
+
   if (docHistoryInfo.categoryName === categoryName)
     categoryID = docHistoryInfo.categoryID;
   else {
