@@ -7,6 +7,7 @@ module.exports = {
 // const glob = require('glob');
 const fetch = require('node-fetch');
 const fs = require('fs');
+const argv = require('./cli');
 
 if (!process.env.FRESHDESK_TOKEN || !process.env.FRESHDESK_HELPDESK_NAME) {
   throw new Error(`The environment variables FRESHDESK_TOKEN and
@@ -183,7 +184,7 @@ async function outer(documentName, folderName) {
 // be using it. At this point, it's only started, doesn't do
 // anything useful yet.
 
-async function uploadFiles(argv) {
+async function uploadFiles() {
   readBackUpFile(argv.source);
 
   let parts = argv.source.split('/');
@@ -195,6 +196,8 @@ async function uploadFiles(argv) {
   // to recognise this as docs.
   if (parts[parts.length - 1] === '') categoryName = parts[parts.length - 2];
   else categoryName = parts[parts.length - 2];
+
+  console.log('categoryName IS ' + categoryName);
 
   if (docHistoryInfo.categoryName === categoryName)
     categoryID = docHistoryInfo.categoryID;

@@ -1,27 +1,50 @@
 'use strict';
 
-// required to pass command line arguments from index.js
-module.exports = {
-  docbuildPDF: docbuildPDF,
-};
 
-function docbuildPDF(argv) {
-  const { mdToPdf } = require('md-to-pdf');
-  const path = require('path');
-  const fs = require('fs');
-  const glob = require('glob');
+const { mdToPdf } = require('md-to-pdf');
+const path = require('path');
+const fs = require('fs');
+const glob = require('glob');
+const argv = require('./cli');
+
+const marked = require('marked');
+
+async function docbuildPDF() {
+  let inputDir = argv.source;
+  let outputDir = argv.pdf_destination;
+  let templatesDir = path.join(__dirname, 'resources');
+
+  const renderer = new marked.Renderer();
+
+  renderer.link = (href, title, text) => {
+    // const escapedText = text.toLowerCase().replace(/[^\w]+/g, '-');
+
+    return `<h3>href = ${href}, title = ${title}, text = ${text}`;
+  };
+
+  renderer.heading = (text, level) => {
+    const escapedText = text.toLowerCase().replace(/[^\w]+/g, '-');
+
+
+    return `
+              <h${level}>
+                <a name="${escapedText}" class="anchor" href="#${escapedText}">
+                  <span class="header-link"></span>
+                </a>
+                ${text}
+              </h${level}>`;
+  };
 
   // for full md-to-pdf config options see:
   // https://github.com/simonhaenisch/md-to-pdf/blob/master/src/lib/config.ts
   const outputOptions = {
-    // array of paths to stylesheets
-    // stylesheet:[path.resolve('./StyleSheets/Stylesheet2.css')],
+    basedir: inputDir,
 
     // string of extra css properties
     css: '',
 
     // extra options to pass to marked (the .md to .html renderer)
-    marked_options: {},
+    marked_options: { renderer: renderer },
 
     // options to be passed to puppeteer's pdf renderer
     pdf_options: {
@@ -33,11 +56,17 @@ function docbuildPDF(argv) {
         bottom: '30mm',
         left: '20mm',
       },
+      displayHeaderFooter: true,
+      headerTemplate: fs.readFileSync(`${templatesDir}/header.html`, 'utf-8'),
+      footerTemplate: fs.readFileSync(`${templatesDir}/footer.html`, 'utf-8'),
     },
   };
 
-  let inputDir = argv.source;
-  let outputDir = argv.pdf_destination;
+  // add any stylesheets in a way that it doesn't override the default one when
+  // none are explicitly passed to docbuild
+  if (argv.stylesheet !== undefined) {
+    outputOptions.stylesheet = [argv.stylesheet];
+  }
 
   if (!fs.existsSync(outputDir)) {
     fs.mkdirSync(outputDir);
@@ -45,20 +74,29 @@ function docbuildPDF(argv) {
 
   let targetFiles = glob.sync(`${inputDir}/**/*.md`);
 
-  // FIXME: literally no idea why this won't work forwards
-  // Stephen: I removed .reverse(), but `docbuild --pdf` needs to be called
-  // in the sample_documents folder (i.e the directory that contains the
-  // docs/ folder)
-  targetFiles.reverse().forEach(inputFile => {
-    // same name as the input file, and places it in the `build` directory
-    let baseName = path.basename(inputFile, path.extname(inputFile));
+  // TODO: make title configurable
+  let groupedInput = '# Documentation Bundle';
+  targetFiles.forEach(inputFile => {
+    let trimmedPath = path.relative(inputDir, inputFile);
+    console.log(`${trimmedPath} found, adding to PDF...`);
 
-    console.log('BASE NAME' + baseName.toUpperCase());
-    let pdfFilePath = path.join(outputDir, baseName + '.pdf');
+    // FIXME: linking to other markdown files is broken
 
-    mdToPdf({ path: inputFile }, outputOptions)
-      .then(data => fs.writeFileSync(pdfFilePath, data.content))
-      .then(() => console.log(`${path.basename(pdfFilePath)} created!`))
-      .catch(console.error);
+    // break from the previous page...
+    groupedInput += '<br><div style="page-break-after:always;"></div>\n';
+    // ...then append the contents of the file
+    groupedInput += fs.readFileSync(inputFile, 'utf-8');
   });
+
+  let pdfFilePath = path.join(outputDir, 'documentation.pdf');
+
+  mdToPdf({ content: groupedInput }, outputOptions)
+    .then(data => fs.writeFileSync(pdfFilePath, data.content))
+    .then(() => console.log(`Final PDF ${path.basename(pdfFilePath)} created!`))
+    .catch(console.error);
 }
+
+// allow resources to be accessed from outside this module
+module.exports = {
+  docbuildPDF,
+};
