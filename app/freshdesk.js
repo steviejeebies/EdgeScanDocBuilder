@@ -2,6 +2,7 @@
 
 module.exports = {
   uploadFiles,
+  readBackUpFile,
 };
 
 // const glob = require('glob');
@@ -190,15 +191,17 @@ async function outer(documentName, folderName) {
 async function uploadFiles() {
   readBackUpFile(argv.source);
 
-  // let parts = argv.source.split('/');
-  // let categoryName;
-  // let categoryID;
+  let parts = argv.source.split('/');
+  let categoryName;
+  let categoryID;
 
-  // // if the user has passed a directory like ./docs, then we want
-  // // 'docs'. If the user passes in './docs/', then we still want
-  // // to recognise this as docs.
-  // if (parts[parts.length - 1] === '') categoryName = parts[parts.length - 2];
-  // else categoryName = parts[parts.length - 2];
+  console.log(parts[parts.length - 1]);
+
+  // if the user has passed a directory like ./docs, then we want
+  // 'docs'. If the user passes in './docs/', then we still want
+  // to recognise this as docs.
+  if (parts[parts.length - 1] === '') categoryName = parts[parts.length - 2];
+  else categoryName = parts[parts.length - 2];
 
   // console.log('categoryName IS ' + categoryName);
 
@@ -216,28 +219,45 @@ async function uploadFiles() {
 
 let docHistoryInfo; // global in file
 
-// Lets say we have a doc/chapter/section folder hierarchy. We've already
-// uploaded this to FreshDesk, which means that the category,
-// folder and article already exist, and have been assigned IDs by
-// the FreshDesk API. We don't need to check
-// if the category/folder/article exists with sequential GET
-// requests, because that would be a waste of time. So what we'll
-// do is store a '.docbuild.json' file in the folder. This will
-// save the name + id of the category, the name + id of all the
-// folders, and the name + id of all the articles. This means
-// that we will PUT (update) instead of POST (create new) for each
-// of these.
+// Lets say we have a doc/chapter/section folder hierarchy. We've
+// already uploaded this to FreshDesk, which means that the
+// category, folder and article already exist, and have been
+// assigned IDs by the FreshDesk API. We don't need to check if the
+// category/folder/article exists with sequential GET requests,
+// because that would be a waste of time. So what we'll do is store
+// a '.docbuild.json' file in the to level folder of the document.
+// This will save the name + id of the category, the name + id of
+// all the folders, and the name + id of all the articles, all as
+// one big object. This means that we will PUT (update) instead of
+// POST (create new) for each of these.
+
+// {
+//   categoryName : 'name of our document, same as the name of the doc file',
+//   categoryID : 'a number assigned for this document/category by FreshDesk',
+//   folders : [
+//     {
+//       folderName : 'name of chapter folder',
+//       folderID : '...',
+//       articles : [
+//         {
+//           articleName : 'name of MD file',
+//           articleID : '...',
+//           lastModified : 'a timestamp'
+//         }
+//       ]
+//     }
+//   ]
+// }
+
 function readBackUpFile(docFolder) {
-  fs.readFile(docFolder + logFileName, (err, data) => {
-    if (err) {
-      // if file does not exist, we make an empty file
-      fs.writeFileSync(
-        docFolder + logFileName, JSON.stringify({}, null, 4));
-      docHistoryInfo = {};
-    } else {
-      docHistoryInfo = JSON.parse(data);
-      console.log(docHistoryInfo);
-    }
-  });
+  try {
+    let data = fs.readFileSync(docFolder + logFileName);
+    docHistoryInfo = JSON.parse(data);
+  } catch (err) {
+    // if file does not exist, we make an empty file
+    docHistoryInfo = {};
+    fs.writeFileSync(docFolder + logFileName,
+      JSON.stringify(docHistoryInfo, null, 4));
+  }
 }
 
