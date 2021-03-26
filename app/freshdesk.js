@@ -195,25 +195,24 @@ async function uploadFiles() {
   let categoryName;
   let categoryID;
 
-  console.log(parts[parts.length - 1]);
-
   // if the user has passed a directory like ./docs, then we want
   // 'docs'. If the user passes in './docs/', then we still want
   // to recognise this as docs.
-  if (parts[parts.length - 1] === '') categoryName = parts[parts.length - 2];
-  else categoryName = parts[parts.length - 2];
+  if (parts[parts.length - 1] === '') 
+    categoryName = parts[parts.length - 2].trim();
+  else categoryName = parts[parts.length - 1].trim();
 
-  // console.log('categoryName IS ' + categoryName);
-
-  // if (docHistoryInfo.categoryName === categoryName)
-  //   categoryID = docHistoryInfo.categoryID;
-  // else {
-  //   categoryID = await getFreshDeskStructureID(
-  //     categoryAPIEndPoint, categoryPOSTContent(categoryName));
-  //   // If the category name was invalid for our history, then we
-  //   // have to create a new
-  //   console.log(categoryID);
-  // }
+  if (docHistoryInfo.categoryName === categoryName)
+    categoryID = docHistoryInfo.categoryID;
+  else {
+    categoryID = await getFreshDeskStructureID(
+      categoryAPIEndPoint, categoryPOSTContent(categoryName));
+    // If the category name was invalid for our history, then we
+    // have to create a new
+    docHistoryInfo.categoryID = categoryID;
+    docHistoryInfo.categoryName = categoryName;
+    console.log(JSON.stringify(docHistoryInfo));
+  }
 
 }
 
