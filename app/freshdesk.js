@@ -105,9 +105,6 @@ async function apiCallFreshDesk(method, url, content = undefined) {
  * @returns {Promise<Object>} The ID of the new article
  */
 function articleUpload(method, folderID, content) {
-  method = 'POST';
-  content = testHTML;
-  folderID = 67000540938;
   let articleUploadURL = articleInFolderAPIEndPoint(folderID);
 
   const options = {
@@ -209,7 +206,7 @@ async function uploadFiles() {
   // folder/file?" over and over and over for stuff that we have already
   // uploaded, we're using a JSON object called 'docHistoryInfo', which
   // keeps track of the unique IDs that FreshDesk has assigned our
-  // Categories/Folders/Articles when we originally uploaded them (scroll
+  // Categories/Folders/Articles when we originally uploaded them (scroll     doc/1_formatting_test_section/md
   // down to the bottom of this file, I've written out a comment to show
   // the structure of this object. Alternatively, if you run 'docbuild
   // --freshdesk' in one of the sample document folders, then open
@@ -301,6 +298,8 @@ async function uploadFiles() {
         // convert MD file to HTML and upload new article to FreshDesk
         // TODO
         // For this, you can use the following function
+
+
         // articleUpload('POST', folderID, content)
         // The parameters here are:
         // * 'POST' - tells FreshDesk we're uploading a brand new article

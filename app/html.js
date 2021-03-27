@@ -74,22 +74,22 @@ function docbuildHTML(argv) {
     fs.mkdirSync(outputDir);
   }
 
-  let targetFiles = glob.sync(`${inputDir}/**/*.md`);
+  // let targetFiles = glob.sync(`${inputDir}/**/*.md`);
 
-  // FIXME: literally no idea why this won't work forwards
-  // Stephen: I removed .reverse(), but `docbuild --html` needs to be called
-  // in the sample_documents folder (i.e the directory that contains
-  // the docs/ folder)
-  targetFiles.reverse().forEach(inputFile => {
-    // same name as the input file, and places it in the `build` directory
-    let baseName = path.basename(inputFile, path.extname(inputFile));
+  // // FIXME: literally no idea why this won't work forwards
+  // // Stephen: I removed .reverse(), but `docbuild --html` needs to be called
+  // // in the sample_documents folder (i.e the directory that contains
+  // // the docs/ folder)
+  // targetFiles.reverse().forEach(inputFile => {
+  //   // same name as the input file, and places it in the `build` directory
+  //   let baseName = path.basename(inputFile, path.extname(inputFile));
 
-    console.log('BASE NAME' + baseName.toUpperCase());
-    let htmlFilePath = path.join(outputDir, baseName + '.html');
+  //   console.log('BASE NAME' + baseName.toUpperCase());
+  //   let htmlFilePath = path.join(outputDir, baseName + '.html');
 
-    mdToPdf({ path: inputFile }, outputOptions)
-      .then(data => fs.writeFileSync(htmlFilePath, data.content))
-      .then(() => console.log(`${path.basename(htmlFilePath)} created!`))
-      .catch(console.error);
-  });
+  //   mdToPdf({ path: inputFile }, outputOptions)
+  //     .then(data => fs.writeFileSync(htmlFilePath, data.content))
+  //     .then(() => console.log(`${path.basename(htmlFilePath)} created!`))
+  //     .catch(console.error);
+  // });
 }
