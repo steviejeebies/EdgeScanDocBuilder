@@ -206,7 +206,7 @@ async function uploadFiles() {
   // folder/file?" over and over and over for stuff that we have already
   // uploaded, we're using a JSON object called 'docHistoryInfo', which
   // keeps track of the unique IDs that FreshDesk has assigned our
-  // Categories/Folders/Articles when we originally uploaded them (scroll     doc/1_formatting_test_section/md
+  // Categories/Folders/Articles when we originally uploaded them (scroll
   // down to the bottom of this file, I've written out a comment to show
   // the structure of this object. Alternatively, if you run 'docbuild
   // --freshdesk' in one of the sample document folders, then open
@@ -317,7 +317,7 @@ async function uploadFiles() {
         uploadedArticles.push(
           {
             articleName: article,
-            articleID: 1234567890,      // dummy value at the moment!
+            articleID: 1234567890, // dummy value at the moment!
             lastModified: fileLastModified,
           },
         );
