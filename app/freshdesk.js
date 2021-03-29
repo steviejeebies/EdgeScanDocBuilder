@@ -299,6 +299,10 @@ async function uploadFiles() {
         // TODO
         // For this, you can use the following function
 
+        //htmlFile = singleHTML(path.resolve(thisArticle));
+        //let content = htmlFile.toString;          UNTESTED, just throwing stuff up for now
+        //DO LINK-Y STUFF HERE
+        // articleUpload('POST', folderID, content)
 
         // articleUpload('POST', folderID, content)
         // The parameters here are:
