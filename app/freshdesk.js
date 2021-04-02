@@ -8,6 +8,7 @@ module.exports = {
 const fetch = require('node-fetch');
 const fs = require('fs');
 const argv = require('./cli');
+const { singleHTML } = require('./html');
 
 const logFileName = '/.docbuild.json';
 
@@ -296,15 +297,31 @@ async function uploadFiles() {
       if (thisArticle === undefined) {
         // if no matching article was found
         // convert MD file to HTML and upload new article to FreshDesk
-        // TODO
-        // For this, you can use the following function
 
-        //htmlFile = singleHTML(path.resolve(thisArticle));
-        //let content = htmlFile.toString;          UNTESTED, just throwing stuff up for now
-        //DO LINK-Y STUFF HERE
+        // htmlFile = singleHTML(path.resolve(thisArticle));
+        // let content = fs.readFileSync(htmlFile, 'utf-8');
+
+        // content = content.replace(
+        //   /\[([^\[]+)\]\(([^\)]+)\)/gm,
+        //   function(match, text, link) {
+        //     let isExternalLink = link.match(/https?:\/\/[^\s]+/g);
+        //     let isAnotherChapter = link.match(/.md/g);
+
+        //     if (!isExternalLink && isAnotherChapter) {
+        //       return `<a href ="#${link}">${text}</a>`;
+        //     }
+
+        //     else if (link[0] === '#') {
+        //       return `<a href="#${filepath}${link}">${text}</a>`;
+        //     }
+
+        //     else {return match};
+        //   }
+        // );
+        
+
         // articleUpload('POST', folderID, content)
 
-        // articleUpload('POST', folderID, content)
         // The parameters here are:
         // * 'POST' - tells FreshDesk we're uploading a brand new article
         // * folderID - we already have this from earlier on in this method
@@ -333,6 +350,10 @@ async function uploadFiles() {
         // method so that it accepts an Article ID, but for the time
         // being, if its just uploading duplicate articles, it's fine
         // // articleUpload('POST', folderID, content)
+        // htmlFile = singleHTML(path.resolve(thisArticle));
+        // let content = htmlFile.toString;         // UNTESTED, just throwing stuff up for now
+        // //DO LINK-Y STUFF HERE
+        // articleUpload('POST', folderID, content);
 
         // since we already have an entry in our docHistoryInfo for this
         // article, we only need to update its lastModified value
