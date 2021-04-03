@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 'use strict';
 
 module.exports = {
@@ -154,8 +155,9 @@ let testHTML = {
 async function getFreshDeskStructureID(apiEndPoint, content) {
   return apiCallFreshDesk('GET', apiEndPoint)
     .then(
-      structuresFound =>
-        structuresFound.find(struct => struct.name === content.name))
+      structuresFound => {
+        return structuresFound.find(struct => struct.name === content.name);
+      })
     .then(result => {
       if (result === undefined) {
         return makeFreshDeskStructure(apiEndPoint, content);
@@ -178,7 +180,7 @@ let docHistoryInfo; // our cache file, stores info about FreshDesk IDs
  */
 
 async function uploadFiles() {
-
+  const path = require('path');
   // For our documents, we have a folder structure of
   // document/chapters/markdown-file. But FreshDesk has its own names for
   // this hierarchy. It's really important you remember this, because the
@@ -298,9 +300,8 @@ async function uploadFiles() {
         // if no matching article was found
         // convert MD file to HTML and upload new article to FreshDesk
 
-        // htmlFile = singleHTML(path.resolve(thisArticle));
-        // let content = fs.readFileSync(htmlFile, 'utf-8');
-
+        let content = singleHTML(path.resolve(argv.source + '/' + chapter + '/' + article));
+        console.log('CONTENT: ' + content);
         // content = content.replace(
         //   /\[([^\[]+)\]\(([^\)]+)\)/gm,
         //   function(match, text, link) {
@@ -318,9 +319,8 @@ async function uploadFiles() {
         //     else {return match};
         //   }
         // );
-        
-
-        // articleUpload('POST', folderID, content)
+        console.log('ATTEMPTING POST');
+        articleUpload('POST', folderID, content)
 
         // The parameters here are:
         // * 'POST' - tells FreshDesk we're uploading a brand new article
@@ -334,14 +334,14 @@ async function uploadFiles() {
         // Note: the articleUpload() call returns the ID that FreshDesk has
         // assigned to this article (but this is wrapped in a promise, so you
         // will need to do something like:
-        // .then(articleID =>                 // around the following push call
-        uploadedArticles.push(
-          {
-            articleName: article,
-            articleID: 1234567890, // dummy value at the moment!
-            lastModified: fileLastModified,
-          },
-        );
+          .then((articleID) =>
+            uploadedArticles.push(
+              {
+                articleName: article,
+                articleID: articleID, // dummy value at the moment!
+                lastModified: fileLastModified,
+              },
+            ));
       } else if (thisArticle.lastModified !== fileLastModified) {
         // convert MD file to HTML and update version on FreshDesk API
 
@@ -350,9 +350,9 @@ async function uploadFiles() {
         // method so that it accepts an Article ID, but for the time
         // being, if its just uploading duplicate articles, it's fine
         // // articleUpload('POST', folderID, content)
-        // htmlFile = singleHTML(path.resolve(thisArticle));
-        // let content = htmlFile.toString;         // UNTESTED, just throwing stuff up for now
-        // //DO LINK-Y STUFF HERE
+        // let htmlFile = singleHTML(path.resolve(argv.source + '/' + chapter + '/' + article));
+        // let content = fs.readFileSync(htmlFile, 'utf-8');
+        // // //DO LINK-Y STUFF HERE
         // articleUpload('POST', folderID, content);
 
         // since we already have an entry in our docHistoryInfo for this
