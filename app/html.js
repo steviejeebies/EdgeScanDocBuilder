@@ -34,7 +34,6 @@
 // required to pass command line arguments from index.js
 module.exports = {
   docbuildHTML: docbuildHTML,
-  singleHTML: singleHTML,
 };
 
 // for full md-to-pdf config options see:
@@ -62,15 +61,6 @@ const outputOptions = {
     },
   },
 };
-
-function singleHTML(inputFile) {
-  const { mdToPdf } = require('md-to-pdf');
-  console.log('BEGINNING ' + inputFile + ' CONVERSION');
-  mdToPdf({ path: inputFile }, outputOptions)
-    .then(data => console.log('DATA: ' + data.content))
-    .then(data => { return data.content; })
-    .catch(console.error);
-}
 
 function docbuildHTML(argv) {
   const { mdToPdf } = require('md-to-pdf');
