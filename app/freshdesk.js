@@ -9,7 +9,6 @@ module.exports = {
 const fetch = require('node-fetch');
 const fs = require('fs');
 const argv = require('./cli');
-const { singleHTML } = require('./html');
 
 const logFileName = '/.docbuild.json';
 
@@ -180,6 +179,7 @@ let docHistoryInfo; // our cache file, stores info about FreshDesk IDs
  */
 
 async function uploadFiles() {
+  const showdown = require('showdown');
   const path = require('path');
   // For our documents, we have a folder structure of
   // document/chapters/markdown-file. But FreshDesk has its own names for
@@ -299,9 +299,14 @@ async function uploadFiles() {
       if (thisArticle === undefined) {
         // if no matching article was found
         // convert MD file to HTML and upload new article to FreshDesk
-
-        let content = singleHTML(path.resolve(argv.source + '/' + chapter + '/' + article));
-        console.log('CONTENT: ' + content);
+        // eslint-disable-next-line no-unused-vars
+        let converter = new showdown.Converter();
+        let desc = converter.makeHtml(fs.readFileSync(argv.source + '/' + chapter + '/' + article, 'utf-8'));
+        let content = {
+          title: path.basename(article, '.md'),
+          description: desc,
+          status: 1,
+        };
         // content = content.replace(
         //   /\[([^\[]+)\]\(([^\)]+)\)/gm,
         //   function(match, text, link) {
@@ -319,7 +324,7 @@ async function uploadFiles() {
         //     else {return match};
         //   }
         // );
-        console.log('ATTEMPTING POST');
+        console.log('POSTING');
         articleUpload('POST', folderID, content)
 
         // The parameters here are:
@@ -334,14 +339,14 @@ async function uploadFiles() {
         // Note: the articleUpload() call returns the ID that FreshDesk has
         // assigned to this article (but this is wrapped in a promise, so you
         // will need to do something like:
-          .then((articleID) =>
+          .then(thisArticle => (
             uploadedArticles.push(
               {
                 articleName: article,
-                articleID: articleID, // dummy value at the moment!
+                articleID: thisArticle, // dummy value at the moment!
                 lastModified: fileLastModified,
               },
-            ));
+            )));
       } else if (thisArticle.lastModified !== fileLastModified) {
         // convert MD file to HTML and update version on FreshDesk API
 
@@ -432,4 +437,3 @@ function readOrCreateBackUpFile(docFolder) {
       JSON.stringify(docHistoryInfo, null, 4));
   }
 }
-
