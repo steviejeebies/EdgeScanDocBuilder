@@ -53,6 +53,16 @@ module.exports = yargs
       hidden: true,
       type: 'string',
     },
+    'freshdesk-start-fresh': {
+      description: 'Clear current cache file and start over',
+      type: 'boolean',
+      default: false,
+    },
+    // 'freshdesk-ignore-cache': {
+    //   description: '',
+    //   type: 'boolean',
+    //   default: false,
+    // },
   })
   .group(
     ['freshdesk', 'FRESHDESK_TOKEN', 'FRESHDESK_HELPDESK_NAME'],
