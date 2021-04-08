@@ -64,12 +64,21 @@ module.exports = yargs
       description: 'Renders documents to PDF format',
       type: 'boolean',
     },
-    pdf_destination: {
+    'pdf-destination': {
       description: 'The folder to store the generated PDFs',
       default: './pdf',
       type: 'string',
     },
-    // TODO: complete this set of options
+    'pdf-title': {
+      description: 'The title on the first page of the generated PDF bundle',
+      default: 'Documentation Bundle',
+      type: 'string',
+    },
+    'pdf-headerfooter': {
+      description: 'Option to render the header and footer in the document',
+      default: true,
+      type: 'boolean',
+    },
   })
   .group(
     ['pdf', 'pdf_destination'],
