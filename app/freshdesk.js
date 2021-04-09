@@ -179,7 +179,6 @@ let docHistoryInfo; // our cache file, stores info about FreshDesk IDs
  */
 
 async function uploadFiles() {
-  const showdown = require('showdown');
   const path = require('path');
   // For our documents, we have a folder structure of
   // document/chapters/markdown-file. But FreshDesk has its own names for
@@ -260,18 +259,15 @@ async function uploadFiles() {
 
   let knownFolders = docHistoryInfo.folders;
 
+  // new loop here, so that article & folder IDs already generated (for purposes of linking)
   for (const chapter of chapters) {
     let thisFolder =
       knownFolders.filter(({folderName}) => folderName === chapter)[0];
-      // getting first index of filter, maybe theres a better function for this
-
     let folderID;
 
     if (thisFolder === undefined) {
-      // if no matching folder was found
       folderID = await getFreshDeskStructureID(
         folderInCategoryAPIEndPoint(categoryID), folderPOSTContent(chapter));
-
       knownFolders.push(
         {
           folderName: chapter,
@@ -282,10 +278,12 @@ async function uploadFiles() {
     } else folderID = thisFolder.folderID;
 
     let localArticles = getArticleNamesInDirectory(argv.source + '/' + chapter);
+    let numArticles = localArticles.length;
+    console.log(numArticles + ' ARTICLES');
+    let articleCount = 0;
 
     if (thisFolder.articles === undefined)
       thisFolder.articles = [];
-
     let uploadedArticles = thisFolder.articles;
 
     for (const article of localArticles) {
@@ -295,35 +293,15 @@ async function uploadFiles() {
       let fileLastModified = getLastModifiedTime(
         argv.source + '/' + chapter + '/' + article);
 
-
       if (thisArticle === undefined) {
         // if no matching article was found
         // convert MD file to HTML and upload new article to FreshDesk
-        // eslint-disable-next-line no-unused-vars
-        let converter = new showdown.Converter();
-        let desc = converter.makeHtml(fs.readFileSync(argv.source + '/' + chapter + '/' + article, 'utf-8'));
         let content = {
           title: path.basename(article, '.md'),
-          description: desc,
+          description: '<h1>PLACEHOLDER FILE</h1>',
           status: 1,
         };
-        // content = content.replace(
-        //   /\[([^\[]+)\]\(([^\)]+)\)/gm,
-        //   function(match, text, link) {
-        //     let isExternalLink = link.match(/https?:\/\/[^\s]+/g);
-        //     let isAnotherChapter = link.match(/.md/g);
 
-        //     if (!isExternalLink && isAnotherChapter) {
-        //       return `<a href ="#${link}">${text}</a>`;
-        //     }
-
-        //     else if (link[0] === '#') {
-        //       return `<a href="#${filepath}${link}">${text}</a>`;
-        //     }
-
-        //     else {return match};
-        //   }
-        // );
         console.log('POSTING');
         articleUpload('POST', folderID, content)
 
@@ -343,35 +321,62 @@ async function uploadFiles() {
             uploadedArticles.push(
               {
                 articleName: article,
-                articleID: thisArticle, // dummy value at the moment!
+                articleID: thisArticle,
                 lastModified: fileLastModified,
               },
-            )));
-      } else if (thisArticle.lastModified !== fileLastModified) {
-        // convert MD file to HTML and update version on FreshDesk API
-
-        // same as above, but we 'PUT' instead of 'POST' to update
-        // Note: I might have to make a small change to the articleUpload()
-        // method so that it accepts an Article ID, but for the time
-        // being, if its just uploading duplicate articles, it's fine
-        // // articleUpload('POST', folderID, content)
-        // let htmlFile = singleHTML(path.resolve(argv.source + '/' + chapter + '/' + article));
-        // let content = fs.readFileSync(htmlFile, 'utf-8');
-        // // //DO LINK-Y STUFF HERE
-        // articleUpload('POST', folderID, content);
-
-        // since we already have an entry in our docHistoryInfo for this
-        // article, we only need to update its lastModified value
-        thisArticle.lastModified = fileLastModified;
+            )))
+          .then(() => articleCount++)
+          .then(() => {
+            if (articleCount === numArticles){
+              uploadData(localArticles, uploadedArticles, chapter, folderID);
+            }
+          });
       }
-
     }
   }
-
   // this will be at the very end of the upload files method,
   // maybe we can make it its own function to make it cleaner
   fs.writeFileSync(argv.source + logFileName,
     JSON.stringify(docHistoryInfo, null, 4));
+}
+// this will be at the very end of the upload files method,
+// maybe we can make it its own function to make it cleaner
+// fs.writeFileSync(argv.source + logFileName,
+//   JSON.stringify(docHistoryInfo, null, 4));
+function uploadData(localArticles, uploadedArticles, chapter, folderID){
+  const showdown = require('showdown');
+  const path = require('path');
+  for (const article of localArticles) {
+    let thisArticle =
+      uploadedArticles.filter(({articleName}) => articleName === article)[0];
+    console.log(thisArticle);
+    let fileLastModified = getLastModifiedTime(
+      argv.source + '/' + chapter + '/' + article);
+
+    if (article.lastModified !== fileLastModified) {
+      // convert MD file to HTML and update version on FreshDesk API
+
+      // same as above, but we 'PUT' instead of 'POST' to update
+      // Note: I might have to make a small change to the articleUpload()
+      // method so that it accepts an Article ID, but for the time
+      // being, if its just uploading duplicate articles, it's fine
+
+      let converter = new showdown.Converter();
+      let desc = converter.makeHtml(fs.readFileSync(argv.source + '/' + chapter + '/' + article, 'utf-8'));
+
+      // DO LINK-Y STUFF HERE
+
+      let content = {
+        title: path.basename(article, '.md'),
+        description: desc,
+        status: 1,
+      };
+
+      console.log('PUTTING');
+      articleUpload('POST', folderID, content);
+      thisArticle.lastModified = fileLastModified;
+    }
+  }
 }
 
 const getChapterNamesInDirectory = source =>
