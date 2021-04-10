@@ -53,6 +53,16 @@ module.exports = yargs
       hidden: true,
       type: 'string',
     },
+    'freshdesk-start-fresh': {
+      description: 'Clear current cache file and start over',
+      type: 'boolean',
+      default: false,
+    },
+    // 'freshdesk-ignore-cache': {
+    //   description: '',
+    //   type: 'boolean',
+    //   default: false,
+    // },
   })
   .group(
     ['freshdesk', 'FRESHDESK_TOKEN', 'FRESHDESK_HELPDESK_NAME'],
@@ -64,12 +74,21 @@ module.exports = yargs
       description: 'Renders documents to PDF format',
       type: 'boolean',
     },
-    pdf_destination: {
+    'pdf-destination': {
       description: 'The folder to store the generated PDFs',
       default: './pdf',
       type: 'string',
     },
-    // TODO: complete this set of options
+    'pdf-title': {
+      description: 'The title on the first page of the generated PDF bundle',
+      default: 'Documentation Bundle',
+      type: 'string',
+    },
+    'pdf-headerfooter': {
+      description: 'Option to render the header and footer in the document',
+      default: true,
+      type: 'boolean',
+    },
   })
   .group(
     ['pdf', 'pdf_destination'],

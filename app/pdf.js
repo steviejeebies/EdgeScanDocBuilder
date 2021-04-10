@@ -33,7 +33,7 @@ async function docbuildPDF() {
         bottom: '30mm',
         left: '20mm',
       },
-      displayHeaderFooter: true,
+      displayHeaderFooter: argv['pdf-headerfooter'],
       headerTemplate: fs.readFileSync(`${templatesDir}/header.html`, 'utf-8'),
       footerTemplate: fs.readFileSync(`${templatesDir}/footer.html`, 'utf-8'),
     },
@@ -50,13 +50,12 @@ async function docbuildPDF() {
   }
 
   let targetFiles = glob.sync(`${inputDir}/**/*.md`);
-
+  
   // Take a look at
   // https://github.com/steviejeebies/EdgeScanDocBuilder/issues/27
   // for a run-through of what the following code is doing
 
-  // TODO: make title configurable
-  let groupedInput = '# Documentation Bundle\n';
+  let groupedInput = `# ${argv['pdf-title']}`;
   targetFiles.forEach(inputFile => {
     let trimmedPath = path.relative(inputDir, inputFile);
     let filePath = trimmedPath.replace('\\', '/');
