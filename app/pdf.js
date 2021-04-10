@@ -50,7 +50,7 @@ async function docbuildPDF() {
   }
 
   let targetFiles = glob.sync(`${inputDir}/**/*.md`);
-  
+
   // Take a look at
   // https://github.com/steviejeebies/EdgeScanDocBuilder/issues/27
   // for a run-through of what the following code is doing
