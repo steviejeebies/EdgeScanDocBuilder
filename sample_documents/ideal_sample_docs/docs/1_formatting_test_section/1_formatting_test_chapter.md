@@ -37,6 +37,14 @@
 <html>
 ```
 
+### Linking Tests
+* [Internal link](#codeblock)
+* [Another internal link](#an-image)
+* [Link to another file](2_linking_test_section/1_linking_test_chapter.md)
+* [Heading in another file](2_linking_test_section/1_linking_test_chapter.md#conclusions)
+* [Link to an external website](https://github.com/)
+* [External link to a section of a page](https://github.com/steviejeebies/EdgeScanDocBuilder#edgescandocbuilder)
+
 ### An image
 ![Shiprock](1_formatting_test_section/Shiprock.png)
 
