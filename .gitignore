@@ -3,6 +3,7 @@ sample_documents/ideal_sample_docs/pdf
 sample_documents/ideal_sample_docs/html
 sample_documents/old_docs/pdf
 sample_documents/old_docs/html
+sample_documents/ideal_sample_docs/docs/.docbuild.json
 
 # Logs
 logs

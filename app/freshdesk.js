@@ -1,13 +1,16 @@
+/* eslint-disable max-len */
 'use strict';
 
 module.exports = {
-  uploadFiles: uploadFiles,
+  uploadFiles,
+  articleUpload,
 };
 
-// const glob = require('glob');
 const fetch = require('node-fetch');
 const fs = require('fs');
 const argv = require('./cli');
+
+const logFileName = '/.docbuild.json';
 
 if (!process.env.FRESHDESK_TOKEN || !process.env.FRESHDESK_HELPDESK_NAME) {
   throw new Error(`The environment variables FRESHDESK_TOKEN and
@@ -93,8 +96,15 @@ async function apiCallFreshDesk(method, url, content = undefined) {
     .then(text => { return JSON.parse(text); });
 }
 
-/* makeArticle posts HTML formatted to a string to users endpoint */
-// eslint-disable-next-line no-unused-vars
+
+/**
+ * Uploads HTML formatted to a string to users endpoint
+ * See {@link https://developer.freshdesk.com/api/#authentication} for details.
+ * @param {Verbs} method The HTTP method to use for the request
+ * @param {Number} folderID the ID that FreshDesk has assigned the folder
+ * @param {Object} [content] Object to be sent in the body of the API call
+ * @returns {Promise<Object>} The ID of the new article
+ */
 function articleUpload(method, folderID, content) {
   let articleUploadURL = articleInFolderAPIEndPoint(folderID);
 
@@ -106,7 +116,7 @@ function articleUpload(method, folderID, content) {
 
   return fetch(articleUploadURL, options)
     .then(res => res.json())
-    .then(json => console.log('ARTICLE UPLOADED'))
+    .then(json => json.id) // returning ID of the article
     // pretty useless message atm, will need updating later
     .catch(err => console.log(err));
 }
@@ -144,8 +154,9 @@ let testHTML = {
 async function getFreshDeskStructureID(apiEndPoint, content) {
   return apiCallFreshDesk('GET', apiEndPoint)
     .then(
-      structuresFound =>
-        structuresFound.find(struct => struct.name === content.name))
+      structuresFound => {
+        return structuresFound.find(struct => struct.name === content.name);
+      })
     .then(result => {
       if (result === undefined) {
         return makeFreshDeskStructure(apiEndPoint, content);
@@ -159,33 +170,69 @@ async function makeFreshDeskStructure(apiEndPoint, content) {
     .then((result) => { return result.id; });
 }
 
-// this is currently just a test function, but it's purpose
-// of feeding one output into an input will be how we will
-// used similarly anyway
+let docHistoryInfo; // our cache file, stores info about FreshDesk IDs
 
-// eslint-disable-next-line no-unused-vars
-async function outer(documentName, folderName) {
-  let categoryID =
-    await getFreshDeskStructureID(
-      categoryAPIEndPoint, categoryPOSTContent(documentName));
-
-  let folderID =
-    await getFreshDeskStructureID(
-      folderInCategoryAPIEndPoint(categoryID), folderPOSTContent(folderName));
-
-  // At this point, Category has been found/made, Folder has been found/made.
-
-  articleUpload(folderID, testHTML);
-}
-
-// outer('here is a category', 'here is a folder');
-
-// This function is similar to outer(), but we will actually
-// be using it. At this point, it's only started, doesn't do
-// anything useful yet.
+/**
+ * This is the main method in freshdesk.js. When passed a directory
+ * (through argv.source), this method will upload the files to FreshDesk
+ * and keep a record of the files/IDs in .docbuild.js
+ */
 
 async function uploadFiles() {
-  readBackUpFile(argv.source);
+  const path = require('path');
+  // For our documents, we have a folder structure of
+  // document/chapters/markdown-file. But FreshDesk has its own names for
+  // this hierarchy. It's really important you remember this, because the
+  // names can definitely get confusing and I probably used these terms
+  // very interchangeably throughout the code:
+
+  // Our 'Document' Folder == FreshDesk 'Category'
+  // Our 'Chapter' Folder == FreshDesk 'Folder'
+  // Our 'Markdown' Files == FreshDesk 'Article'
+
+  // Login to FreshDesk's website with the details I posted in the group
+  // chat (DM me if you're not sure where to look on the site for the
+  // Solutions page), and you'll see this in action.
+
+  // When you're running 'docbuild --freshdesk', (in our case) you'll be
+  // running it in the terminal in the folder
+  // 'sample_documents/ideal_sample_docs'. In this folder, there is a
+  // folder called 'docs'. This will be the name of our FreshDesk
+  // Category. In the case of PDF, the entirety of what is contained in
+  // the docs folder will be one big PDF, but in the case of HTML, we have
+  // to treat it very differently: we have to convert each MD file into an
+  // individual HTML file, then put it into the right Folder on
+  // FreshDesk.
+
+  // To save time on having to ask FreshDesk "do you have this
+  // folder/file?" over and over and over for stuff that we have already
+  // uploaded, we're using a JSON object called 'docHistoryInfo', which
+  // keeps track of the unique IDs that FreshDesk has assigned our
+  // Categories/Folders/Articles when we originally uploaded them (scroll
+  // down to the bottom of this file, I've written out a comment to show
+  // the structure of this object. Alternatively, if you run 'docbuild
+  // --freshdesk' in one of the sample document folders, then open
+  // '.docbuild.json' file, you'll see a real example). We're going to
+  // write this object to a file called '.docbuild.json' when we're done
+  // everything, which will be saved in the docs folder.
+
+  // The method 'readOrCreateBackUpFile()' reads this file and stores its
+  // contents back into 'docHistoryInfo' whenever we start up this app
+  // again. 'uploadFiles()' is the main method in the FreskDesk.js file.
+  // What it's doing (at the moment) is comparing the current names of
+  // files/folders in our documentation folder with what is in
+  // 'docHistoryInfo' to see if this info already exists on FreshDesk. If
+  // it does, we can just grab the ID values from this object and work for
+  // there. If anything is missing in the Object, then we create an
+  // equivalent structure on FreshDesk through the API, grab the new ID,
+  // and store it in this object.
+
+  if (argv['freshdesk-start-fresh']) {
+    // delete the cache file to start over
+    fs.rmSync(path.resolve(argv.source, logFileName));
+  }
+
+  readOrCreateBackUpFile(argv.source);
 
   let parts = argv.source.split('/');
   let categoryName;
@@ -194,10 +241,9 @@ async function uploadFiles() {
   // if the user has passed a directory like ./docs, then we want
   // 'docs'. If the user passes in './docs/', then we still want
   // to recognise this as docs.
-  if (parts[parts.length - 1] === '') categoryName = parts[parts.length - 2];
-  else categoryName = parts[parts.length - 2];
-
-  console.log('categoryName IS ' + categoryName);
+  if (parts[parts.length - 1] === '')
+    categoryName = parts[parts.length - 2].trim();
+  else categoryName = parts[parts.length - 1].trim();
 
   if (docHistoryInfo.categoryName === categoryName)
     categoryID = docHistoryInfo.categoryID;
@@ -206,33 +252,198 @@ async function uploadFiles() {
       categoryAPIEndPoint, categoryPOSTContent(categoryName));
     // If the category name was invalid for our history, then we
     // have to create a new
-    console.log(categoryID);
+    docHistoryInfo.categoryID = categoryID;
+    docHistoryInfo.categoryName = categoryName;
+    docHistoryInfo.folders = [];
   }
 
-}
+  let chapters = getChapterNamesInDirectory(argv.source);
 
-let docHistoryInfo; // global in file
+  if (docHistoryInfo.folders === undefined)
+    docHistoryInfo.folders = [];
 
-// Lets say we have a doc/chapter/section folder hierarchy. We've already
-// uploaded this to FreshDesk, which means that the category,
-// folder and article already exist. We don't need to check
-// if the category/folder/article exists with sequential GET
-// requests, because that would be a waste of time. So what we'll
-// do is store a '.docbuild.json' file in the folder. This will
-// save the name + id of the category, the name + id of all the
-// folders, and the name + id of all the articles. This means
-// that we will PUT (update) instead of POST (create new) for each
-// of these.
-function readBackUpFile(docFolder) {
-  fs.readFile(docFolder + '/.docbuild.json', (err, data) => {
-    if (err) {
-      // if file does not exist, we make an empty file
-      fs.writeFileSync(docFolder + '/.docbuild.json', '');
-      docHistoryInfo = {};
-    } else {
-      docHistoryInfo = JSON.parse(data);
-      console.log(docHistoryInfo);
+  let knownFolders = docHistoryInfo.folders;
+
+  // new loop here, so that article & folder IDs already generated (for purposes of linking)
+  for (const chapter of chapters) {
+    let thisFolder =
+      knownFolders.filter(({folderName}) => folderName === chapter)[0];
+    let folderID;
+
+    if (thisFolder === undefined) {
+      folderID = await getFreshDeskStructureID(
+        folderInCategoryAPIEndPoint(categoryID), folderPOSTContent(chapter));
+      knownFolders.push(
+        {
+          folderName: chapter,
+          folderID: folderID,
+          articles: [],
+        });
+      thisFolder = knownFolders[knownFolders.length - 1];
+    } else folderID = thisFolder.folderID;
+
+    let localArticles = getArticleNamesInDirectory(argv.source + '/' + chapter);
+    let numArticles = localArticles.length;
+    console.log(numArticles + ' ARTICLES');
+    let articleCount = 0;
+
+    if (thisFolder.articles === undefined)
+      thisFolder.articles = [];
+    let uploadedArticles = thisFolder.articles;
+
+    for (const article of localArticles) {
+      let thisArticle =
+        uploadedArticles.filter(({articleName}) => articleName === article)[0];
+
+      let fileLastModified = getLastModifiedTime(
+        argv.source + '/' + chapter + '/' + article);
+
+      if (thisArticle === undefined) {
+        // if no matching article was found
+        // convert MD file to HTML and upload new article to FreshDesk
+        let content = {
+          title: path.basename(article, '.md'),
+          description: '<h1>PLACEHOLDER FILE</h1>',
+          status: 1,
+        };
+
+        console.log('POSTING');
+        articleUpload('POST', folderID, content)
+
+        // The parameters here are:
+        // * 'POST' - tells FreshDesk we're uploading a brand new article
+        // * folderID - we already have this from earlier on in this method
+        // * content - this is the HTML (as a string, see the variable
+        //             'testHTML' above to see what this object should look like
+        //             This 'content' variable needs to be generated by HTML.js
+        //             for this particular MD file, so we should make our call
+        //             to HTML.js in this block.
+
+        // Note: the articleUpload() call returns the ID that FreshDesk has
+        // assigned to this article (but this is wrapped in a promise, so you
+        // will need to do something like:
+          .then(thisArticle => (
+            uploadedArticles.push(
+              {
+                articleName: article,
+                articleID: thisArticle,
+                lastModified: fileLastModified,
+              },
+            )))
+          .then(() => articleCount++)
+          .then(() => {
+            if (articleCount === numArticles){
+              uploadData(localArticles, uploadedArticles, chapter, folderID);
+            }
+          });
+      }
     }
-  });
+  }
+  // this will be at the very end of the upload files method,
+  // maybe we can make it its own function to make it cleaner
+  fs.writeFileSync(argv.source + logFileName,
+    JSON.stringify(docHistoryInfo, null, 4));
+}
+// this will be at the very end of the upload files method,
+// maybe we can make it its own function to make it cleaner
+// fs.writeFileSync(argv.source + logFileName,
+//   JSON.stringify(docHistoryInfo, null, 4));
+function uploadData(localArticles, uploadedArticles, chapter, folderID){
+  const showdown = require('showdown');
+  const path = require('path');
+  for (const article of localArticles) {
+    let thisArticle =
+      uploadedArticles.filter(({articleName}) => articleName === article)[0];
+    console.log(thisArticle);
+    let fileLastModified = getLastModifiedTime(
+      argv.source + '/' + chapter + '/' + article);
+
+    if (article.lastModified !== fileLastModified) {
+      // convert MD file to HTML and update version on FreshDesk API
+
+      // same as above, but we 'PUT' instead of 'POST' to update
+      // Note: I might have to make a small change to the articleUpload()
+      // method so that it accepts an Article ID, but for the time
+      // being, if its just uploading duplicate articles, it's fine
+
+      let converter = new showdown.Converter();
+      let desc = converter.makeHtml(fs.readFileSync(argv.source + '/' + chapter + '/' + article, 'utf-8'));
+
+      // DO LINK-Y STUFF HERE
+
+      let content = {
+        title: path.basename(article, '.md'),
+        description: desc,
+        status: 1,
+      };
+
+      console.log('PUTTING');
+      articleUpload('POST', folderID, content);
+      thisArticle.lastModified = fileLastModified;
+    }
+  }
 }
 
+const getChapterNamesInDirectory = source =>
+  fs.readdirSync(source, { withFileTypes: true })
+    .filter(dirent => dirent.isDirectory())
+    .map(dirent => dirent.name);
+
+const getArticleNamesInDirectory = source =>
+  fs.readdirSync(source, { withFileTypes: true })
+    .filter(dirent => {
+      return dirent.isFile() && dirent.name.match(/[^\.]*.md/g);
+    })
+    .map(dirent => dirent.name);
+
+const getLastModifiedTime = (path) => {
+  const stats = fs.statSync(path);
+  return stats.mtime;
+};
+
+// Lets say we have a doc/chapter/section folder hierarchy. We've
+// already uploaded this to FreshDesk, which means that the
+// category, folder and article already exist, and have been
+// assigned IDs by the FreshDesk API. We don't need to check if the
+// category/folder/article exists with sequential GET requests,
+// because that would be a waste of time. So what we'll do is store
+// a '.docbuild.json' file in the to level folder of the document.
+// This will save the name + id of the category, the name + id of
+// all the folders, and the name + id of all the articles, all as
+// one big object. This means that we will PUT (update) instead of
+// POST (create new) for each of these.
+
+// {
+//   categoryName : 'name of our document, same as the name of the doc file',
+//   categoryID : 'a unique ID assigned for this item by FreshDesk',
+//   folders : [  // array
+//     {
+//       folderName : 'name of chapter folder',
+//       folderID : '...',
+//       articles : [
+//         {
+//           articleName : 'name of MD file',
+//           articleID : '...',
+//           lastModified : 'a timestamp'
+//         },
+//         {
+//           articleName : 'name of MD file',
+//           articleID : '...',
+//           lastModified : 'a timestamp'
+//         },
+//       ]
+//     }
+//   ]
+// }
+
+function readOrCreateBackUpFile(docFolder) {
+  try {
+    let data = fs.readFileSync(docFolder + logFileName);
+    docHistoryInfo = JSON.parse(data);
+  } catch (err) {
+    // if file does not exist, we make an empty file
+    docHistoryInfo = {};
+    fs.writeFileSync(docFolder + logFileName,
+      JSON.stringify(docHistoryInfo, null, 4));
+  }
+}
