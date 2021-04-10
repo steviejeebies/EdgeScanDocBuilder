@@ -53,7 +53,7 @@ module.exports = yargs
       hidden: true,
       type: 'string',
     },
-    'freshdesk-start-fresh': {
+    freshdesk_start_fresh: {
       description: 'Clear current cache file and start over',
       type: 'boolean',
       default: false,
@@ -74,17 +74,17 @@ module.exports = yargs
       description: 'Renders documents to PDF format',
       type: 'boolean',
     },
-    'pdf-destination': {
+    pdf_destination: {
       description: 'The folder to store the generated PDFs',
       default: './pdf',
       type: 'string',
     },
-    'pdf-title': {
+    pdf_title: {
       description: 'The title on the first page of the generated PDF bundle',
       default: 'Documentation Bundle',
       type: 'string',
     },
-    'pdf-headerfooter': {
+    pdf_headerfooter: {
       description: 'Option to render the header and footer in the document',
       default: true,
       type: 'boolean',
