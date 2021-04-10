@@ -56,7 +56,7 @@ async function docbuildPDF() {
         bottom: '30mm',
         left: '20mm',
       },
-      displayHeaderFooter: true,
+      displayHeaderFooter: argv['pdf-headerfooter'],
       headerTemplate: fs.readFileSync(`${templatesDir}/header.html`, 'utf-8'),
       footerTemplate: fs.readFileSync(`${templatesDir}/footer.html`, 'utf-8'),
     },
@@ -74,8 +74,7 @@ async function docbuildPDF() {
 
   let targetFiles = glob.sync(`${inputDir}/**/*.md`);
 
-  // TODO: make title configurable
-  let groupedInput = '# Documentation Bundle';
+  let groupedInput = `# ${argv['pdf-title']}`;
   targetFiles.forEach(inputFile => {
     let trimmedPath = path.relative(inputDir, inputFile);
     console.log(`${trimmedPath} found, adding to PDF...`);

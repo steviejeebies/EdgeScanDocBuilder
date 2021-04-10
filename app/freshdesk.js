@@ -227,6 +227,11 @@ async function uploadFiles() {
   // equivalent structure on FreshDesk through the API, grab the new ID,
   // and store it in this object.
 
+  if (argv['freshdesk-start-fresh']) {
+    // delete the cache file to start over
+    fs.rmSync(path.resolve(argv.source, logFileName));
+  }
+
   readOrCreateBackUpFile(argv.source);
 
   let parts = argv.source.split('/');
