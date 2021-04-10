@@ -23,6 +23,7 @@
     "glob": "^7.1.6",
     "md-to-pdf": "^3.3.1",
     "node-fetch": "^2.6.1",
+    "showdown": "^1.9.1",
     "yargs": "^16.2.0"
   },
   "devDependencies": {
