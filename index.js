@@ -3,6 +3,7 @@
 'use strict';
 
 const argv = require('./app/cli');
+const fs = require('fs');
 
 if (argv.pdf) {
   let pdf = require('./app/pdf');
