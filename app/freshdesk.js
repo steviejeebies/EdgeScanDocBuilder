@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 /* eslint-disable max-len */
 'use strict';
 
@@ -9,6 +10,7 @@ module.exports = {
 const fetch = require('node-fetch');
 const fs = require('fs');
 const argv = require('./cli');
+const { FRESHDESK_HELPDESK_NAME } = require('./cli');
 
 const logFileName = '/.docbuild.json';
 
@@ -227,11 +229,6 @@ async function uploadFiles() {
   // equivalent structure on FreshDesk through the API, grab the new ID,
   // and store it in this object.
 
-  if (argv['freshdesk-start-fresh']) {
-    // delete the cache file to start over
-    fs.rmSync(path.resolve(argv.source, logFileName));
-  }
-
   readOrCreateBackUpFile(argv.source);
 
   let parts = argv.source.split('/');
@@ -258,6 +255,8 @@ async function uploadFiles() {
   }
 
   let chapters = getChapterNamesInDirectory(argv.source);
+  let numChapters = chapters.length;
+  let chapterCount = 0;
 
   if (docHistoryInfo.folders === undefined)
     docHistoryInfo.folders = [];
@@ -284,7 +283,6 @@ async function uploadFiles() {
 
     let localArticles = getArticleNamesInDirectory(argv.source + '/' + chapter);
     let numArticles = localArticles.length;
-    console.log(numArticles + ' ARTICLES');
     let articleCount = 0;
 
     if (thisFolder.articles === undefined)
@@ -307,7 +305,6 @@ async function uploadFiles() {
           status: 1,
         };
 
-        console.log('POSTING');
         articleUpload('POST', folderID, content)
 
         // The parameters here are:
@@ -333,7 +330,10 @@ async function uploadFiles() {
           .then(() => articleCount++)
           .then(() => {
             if (articleCount === numArticles){
-              uploadData(localArticles, uploadedArticles, chapter, folderID);
+              chapterCount++;
+              if (chapterCount === numChapters){
+                uploadData(chapters, knownFolders);
+              }
             }
           });
       }
@@ -344,42 +344,67 @@ async function uploadFiles() {
   fs.writeFileSync(argv.source + logFileName,
     JSON.stringify(docHistoryInfo, null, 4));
 }
-// this will be at the very end of the upload files method,
-// maybe we can make it its own function to make it cleaner
-// fs.writeFileSync(argv.source + logFileName,
-//   JSON.stringify(docHistoryInfo, null, 4));
-function uploadData(localArticles, uploadedArticles, chapter, folderID){
+
+function uploadData(chapters, knownFolders){
   const showdown = require('showdown');
   const path = require('path');
-  for (const article of localArticles) {
-    let thisArticle =
-      uploadedArticles.filter(({articleName}) => articleName === article)[0];
-    console.log(thisArticle);
-    let fileLastModified = getLastModifiedTime(
-      argv.source + '/' + chapter + '/' + article);
+  fs.writeFileSync(argv.source + logFileName,
+    JSON.stringify(docHistoryInfo, null, 4));
+  for (const chapter of chapters) {
+    let thisFolder =
+      knownFolders.filter(({folderName}) => folderName === chapter)[0];
+    let folderID = thisFolder.folderID;
 
-    if (article.lastModified !== fileLastModified) {
+    let localArticles = getArticleNamesInDirectory(argv.source + '/' + chapter);
+
+    if (thisFolder.articles === undefined)
+      thisFolder.articles = [];
+    let uploadedArticles = thisFolder.articles;
+
+    for (const article of localArticles) {
+      let thisArticle =
+      uploadedArticles.filter(({articleName}) => articleName === article)[0];
+      console.log(thisArticle);
+      let fileLastModified = getLastModifiedTime(
+        argv.source + '/' + chapter + '/' + article);
+
+      if (article.lastModified !== fileLastModified) {
       // convert MD file to HTML and update version on FreshDesk API
 
-      // same as above, but we 'PUT' instead of 'POST' to update
-      // Note: I might have to make a small change to the articleUpload()
-      // method so that it accepts an Article ID, but for the time
-      // being, if its just uploading duplicate articles, it's fine
+        // same as above, but we 'PUT' instead of 'POST' to update
+        // Note: I might have to make a small change to the articleUpload()
+        // method so that it accepts an Article ID, but for the time
+        // being, if its just uploading duplicate articles, it's fine
+        let converter = new showdown.Converter();
+        converter.setOption('tables', true);
+        converter.setOption('simpleLineBreaks', true);
+        let desc = converter.makeHtml(fs.readFileSync(argv.source + '/' + chapter + '/' + article, 'utf-8'));
 
-      let converter = new showdown.Converter();
-      let desc = converter.makeHtml(fs.readFileSync(argv.source + '/' + chapter + '/' + article, 'utf-8'));
+        desc = desc.replace(
+          /<a\s+(?:[^>]*?\s+)?href=(["'])(.*?)\1>/gm,
+          function(match, text, link) {
+            let isExternalLink = (link.match(/https?:\/\/[^\s]+/g) !== null);
+            let isAnotherArticle = (link.match(/\.md/g) !== null);
+            // if the link is to a different file
+            if (!isExternalLink && isAnotherArticle) {
+              let newLink = formatLink(link);
+              return `<a href="${newLink}">$`;
+            }
+            // for anything else, just leave it unmodified
+            return match;
+          });
 
-      // DO LINK-Y STUFF HERE
+        // console.log(desc);
 
-      let content = {
-        title: path.basename(article, '.md'),
-        description: desc,
-        status: 1,
-      };
+        let content = {
+          title: path.basename(article, '.md'),
+          description: desc,
+          status: 1,
+        };
 
-      console.log('PUTTING');
-      articleUpload('POST', folderID, content);
-      thisArticle.lastModified = fileLastModified;
+        articleUpload('POST', folderID, content); //Should be 'PUT', but updating doesn't seem to be working for me
+        thisArticle.lastModified = fileLastModified;
+      }
     }
   }
 }
@@ -400,6 +425,26 @@ const getLastModifiedTime = (path) => {
   const stats = fs.statSync(path);
   return stats.mtime;
 };
+
+function formatLink(link){
+  const path = path;
+  let newLink;
+  let article = path.basename(link, '.md');
+  console.log(article);
+  let articlePath = link.replace('/' + article, '');
+  console.log(articlePath);
+  let knownFolders = docHistoryInfo.folders;
+  let thisFolder = knownFolders.filter(({folderName}) => folderName === articlePath)[0];
+  let knownArticles = thisFolder.articles;
+  let thisArticle = knownArticles.filter(({articleName}) => articleName === article)[0];
+  if (thisArticle !== undefined){
+    newLink = 'https://' + FRESHDESK_HELPDESK_NAME + '.freshdesk.com/a/solutions/articles/' + thisArticle.articleID;
+    console.log(newLink);
+    return newLink;
+  } else {
+    return link;
+  }
+}
 
 // Lets say we have a doc/chapter/section folder hierarchy. We've
 // already uploaded this to FreshDesk, which means that the
