@@ -7,33 +7,10 @@ const fs = require('fs');
 const glob = require('glob');
 const argv = require('./cli');
 
-const marked = require('marked');
-
 async function docbuildPDF() {
   let inputDir = argv.source;
   let outputDir = argv.pdf_destination;
   let templatesDir = path.join(__dirname, 'resources');
-
-  const renderer = new marked.Renderer();
-
-  renderer.link = (href, title, text) => {
-    // const escapedText = text.toLowerCase().replace(/[^\w]+/g, '-');
-
-    return `<h3>href = ${href}, title = ${title}, text = ${text}`;
-  };
-
-  renderer.heading = (text, level) => {
-    const escapedText = text.toLowerCase().replace(/[^\w]+/g, '-');
-
-
-    return `
-              <h${level}>
-                <a name="${escapedText}" class="anchor" href="#${escapedText}">
-                  <span class="header-link"></span>
-                </a>
-                ${text}
-              </h${level}>`;
-  };
 
   // for full md-to-pdf config options see:
   // https://github.com/simonhaenisch/md-to-pdf/blob/master/src/lib/config.ts
@@ -44,7 +21,7 @@ async function docbuildPDF() {
     css: '',
 
     // extra options to pass to marked (the .md to .html renderer)
-    marked_options: { renderer: renderer },
+    marked_options: {},
 
     // options to be passed to puppeteer's pdf renderer
     pdf_options: {
@@ -73,18 +50,63 @@ async function docbuildPDF() {
   }
 
   let targetFiles = glob.sync(`${inputDir}/**/*.md`);
+  
+  // Take a look at
+  // https://github.com/steviejeebies/EdgeScanDocBuilder/issues/27
+  // for a run-through of what the following code is doing
 
   let groupedInput = `# ${argv['pdf-title']}`;
   targetFiles.forEach(inputFile => {
     let trimmedPath = path.relative(inputDir, inputFile);
+    let filePath = trimmedPath.replace('\\', '/');
     console.log(`${trimmedPath} found, adding to PDF...`);
 
-    // FIXME: linking to other markdown files is broken
-
-    // break from the previous page...
+    // break from the previous page
     groupedInput += '<br><div style="page-break-after:always;"></div>\n';
-    // ...then append the contents of the file
-    groupedInput += fs.readFileSync(inputFile, 'utf-8');
+
+    // indicate the start of a new file
+    groupedInput += `<span id=${filePath}></span>`;
+
+    let content = fs.readFileSync(inputFile, 'utf-8');
+
+    // render headers with an ID that includes the file it came from
+    // ie. use the file's path as a namespace for the ID
+    content = content.replace(
+      /^ {0,3}(#{1,6})(.*)(?:\n+|$)/gm,
+      function(match, hashes, text) {
+        let level = hashes.length;
+        let title = text.trim();
+        let id = text.toLowerCase().trim()
+          .replace(/<[!\/a-z].*?>/ig, '') // remove html tags
+          .replace(/[^\w\s]/g, '') // remove invalid chars
+          .replace(/\s/g, '-'); // replace whitespace with a hyphen
+
+        return `<span id="${id}"></span>\n` + // this line might be unnecessary
+          `<h${level} id="${filePath}#${id}">${title}</h${level}>\n`;
+      });
+
+    // allow links to the namespaced IDs
+    content = content.replace(
+      /\[([^\[]+)\]\(([^\)]+)\)/gm,
+      function(match, text, link) {
+        let isExternalLink = link.match(/https?:\/\/[^\s]+/g);
+        let isAnotherChapter = link.match(/.md/g);
+
+        // if the link is to a different file
+        if (!isExternalLink && isAnotherChapter) {
+          return `<a href="#${link}">${text}</a>`;
+        }
+
+        // if the link is to within its own file
+        if (link[0] === '#') {
+          return `<a href="#${filePath}${link}">${text}</a>`;
+        }
+
+        // for anything else, just leave it unmodified
+        return match;
+      });
+
+    groupedInput += content;
   });
 
   let pdfFilePath = path.join(outputDir, 'documentation.pdf');
