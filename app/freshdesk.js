@@ -190,7 +190,7 @@ async function makeFreshDeskStructure(apiEndPoint, content) {
     .then((result) => { return result.id; });
 }
 
-let docHistoryInfo; // our cache file, stores info about FreshDesk IDs
+let freshDeskCache; // our cache file, stores info about FreshDesk IDs
 
 /**
  * This is the main method in freshdesk.js. When passed a directory
@@ -246,7 +246,7 @@ async function uploadFiles() {
   // equivalent structure on FreshDesk through the API, grab the new ID,
   // and store it in this object.
 
-  readOrCreateBackUpFile(argv.source);
+  readOrCreateFreshDeskCache(argv.source);
 
   let parts = argv.source.split('/');
   let categoryName;
@@ -259,26 +259,26 @@ async function uploadFiles() {
     categoryName = parts[parts.length - 2].trim();
   else categoryName = parts[parts.length - 1].trim();
 
-  if (docHistoryInfo.categoryName === categoryName)
-    categoryID = docHistoryInfo.categoryID;
+  if (freshDeskCache.categoryName === categoryName)
+    categoryID = freshDeskCache.categoryID;
   else {
     categoryID = await getFreshDeskStructureID(
       categoryAPIEndPoint, categoryPOSTContent(categoryName));
     // If the category name was invalid for our history, then we
     // have to create a new
-    docHistoryInfo.categoryID = categoryID;
-    docHistoryInfo.categoryName = categoryName;
-    docHistoryInfo.folders = [];
+    freshDeskCache.categoryID = categoryID;
+    freshDeskCache.categoryName = categoryName;
+    freshDeskCache.folders = [];
   }
 
   let chapters = getChapterNamesInDirectory(argv.source);
   let numChapters = chapters.length;
   let chapterCount = 0;
 
-  if (docHistoryInfo.folders === undefined)
-    docHistoryInfo.folders = [];
+  if (freshDeskCache.folders === undefined)
+    freshDeskCache.folders = [];
 
-  let knownFolders = docHistoryInfo.folders;
+  let knownFolders = freshDeskCache.folders;
 
   // new loop here, so that article & folder IDs already generated (for purposes of linking)
   for (const chapter of chapters) {
@@ -351,16 +351,12 @@ async function uploadFiles() {
       }
     }
   }
-  // this will be at the very end of the upload files method,
-  // maybe we can make it its own function to make it cleaner
-  fs.writeFileSync(argv.source + logFileName,
-    JSON.stringify(docHistoryInfo, null, 4));
 }
 
 function uploadData(chapters, knownFolders){
   const showdown = require('showdown');
   fs.writeFileSync(argv.source + logFileName,
-    JSON.stringify(docHistoryInfo, null, 4));
+    JSON.stringify(freshDeskCache, null, 4));
   for (const chapter of chapters) {
     let thisFolder =
       knownFolders.filter(({folderName}) => folderName === chapter)[0];
@@ -389,32 +385,15 @@ function uploadData(chapters, knownFolders){
         let converter = new showdown.Converter();
         converter.setOption('tables', true);
         converter.setOption('simpleLineBreaks', true);
-        let desc = converter.makeHtml(fs.readFileSync(argv.source + '/' + chapter + '/' + article, 'utf-8'));
+        let html = converter.makeHtml(fs.readFileSync(argv.source + '/' + chapter + '/' + article, 'utf-8'));
 
-        desc = desc.replace(
-          /<a\s+(?:[^>]*?\s+)?href=(["'])(.*?)\1>/gm,
-          function(match, text, link) {
-            let isExternalLink = (link.match(/https?:\/\/[^\s]+/g) !== null);
-            let isAnotherArticle = (link.match(/\.md/g) !== null);
-
-            // this mightn't work
-            if (link[0] === '#') {
-              return `<a href="#${link}">${text}</a>`;
-            }
-            // if the link is to a different file
-            if (!isExternalLink && isAnotherArticle) {
-              let newLink = formatLink(link);
-              return `<a href="${newLink}">$`;
-            }
-            // for anything else, just leave it unmodified
-            return match;
-          });
+        let htmlToUpload = htmlLinkRegex(html);
 
         // console.log(desc);
 
         let content = {
           title: path.basename(article, '.md'),
-          description: desc,
+          description: htmlToUpload,
           status: 1,
         };
 
@@ -423,6 +402,28 @@ function uploadData(chapters, knownFolders){
       }
     }
   }
+}
+
+function htmlLinkRegex(html) {
+  return html.replace(
+    /<a\s+(?:[^>]*?\s+)?href=(["'])(.*?)\1>/gm,
+    function(match, text, link) {
+      let isExternalLink = (link.match(/https?:\/\/[^\s]+/g) !== null);
+      let isAnotherArticle = (link.match(/\.md/g) !== null);
+
+      // If it is an interal link, pointing to a section of this article
+      if (link[0] === '#') {
+        return `<a href="${link}">`;
+      }
+
+      // if the link is to a different file
+      if (!isExternalLink && isAnotherArticle) {
+        let newLink = formatLink(link);
+        return `<a href="${newLink}">`;
+      }
+      // for anything else, just leave it unmodified
+      return match;
+    });
 }
 
 const getChapterNamesInDirectory = source =>
@@ -448,7 +449,7 @@ function formatLink(link){
   console.log(article);
   let articlePath = link.replace('/' + article, '');
   console.log(articlePath);
-  let knownFolders = docHistoryInfo.folders;
+  let knownFolders = freshDeskCache.folders;
   let thisFolder = knownFolders.filter(({folderName}) => folderName === articlePath)[0];
   let knownArticles = thisFolder.articles;
   let thisArticle = knownArticles.filter(({articleName}) => articleName === article)[0];
@@ -496,14 +497,19 @@ function formatLink(link){
 //   ]
 // }
 
-function readOrCreateBackUpFile(docFolder) {
+function readOrCreateFreshDeskCache(docFolder) {
   try {
     let data = fs.readFileSync(docFolder + logFileName);
-    docHistoryInfo = JSON.parse(data);
+    freshDeskCache = JSON.parse(data);
   } catch (err) {
     // if file does not exist, we make an empty file
-    docHistoryInfo = {};
+    freshDeskCache = {};
     fs.writeFileSync(docFolder + logFileName,
-      JSON.stringify(docHistoryInfo, null, 4));
+      JSON.stringify(freshDeskCache, null, 4));
   }
+}
+
+function updateFreshDeskCache() {
+  fs.writeFileSync(argv.source + logFileName,
+    JSON.stringify(freshDeskCache, null, 4));
 }
