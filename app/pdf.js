@@ -28,10 +28,10 @@ async function docbuildPDF() {
       printBackground: true,
       format: 'a4',
       margin: {
-        top: '30mm',
-        right: '40mm',
-        bottom: '30mm',
-        left: '20mm',
+        top: '5mm',
+        right: '5mm',
+        bottom: '5mm',
+        left: '5mm',
       },
       displayHeaderFooter: argv['pdf-headerfooter'],
       headerTemplate: fs.readFileSync(`${templatesDir}/header.html`, 'utf-8'),
@@ -50,7 +50,7 @@ async function docbuildPDF() {
   }
 
   let targetFiles = glob.sync(`${inputDir}/**/*.md`);
-  
+
   // Take a look at
   // https://github.com/steviejeebies/EdgeScanDocBuilder/issues/27
   // for a run-through of what the following code is doing

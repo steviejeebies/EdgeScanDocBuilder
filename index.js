@@ -3,6 +3,12 @@
 'use strict';
 
 const argv = require('./app/cli');
+const fs = require('fs');
+
+if(argv.test) {
+  let images = require('./app/images');
+  images.uploadImages('./docs');
+}
 
 if (argv.pdf) {
   let pdf = require('./app/pdf');
