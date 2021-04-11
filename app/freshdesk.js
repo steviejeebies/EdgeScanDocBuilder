@@ -389,9 +389,9 @@ function uploadData(chapters, knownFolders){
         let converter = new showdown.Converter();
         converter.setOption('tables', true);
         converter.setOption('simpleLineBreaks', true);
-        let desc = converter.makeHtml(fs.readFileSync(argv.source + '/' + chapter + '/' + article, 'utf-8'));
+        let html = converter.makeHtml(fs.readFileSync(argv.source + '/' + chapter + '/' + article, 'utf-8'));
 
-        let htmlToUpload = htmlRegexLinks(desc);
+        let htmlToUpload = htmlLinkRegex(html);
 
         // console.log(desc);
 
@@ -408,17 +408,22 @@ function uploadData(chapters, knownFolders){
   }
 }
 
-function htmlRegexLinks(inputHTML) {
-  return inputHTML.replace(
+function htmlLinkRegex(html) {
+  return html.replace(
     /<a\s+(?:[^>]*?\s+)?href=(["'])(.*?)\1>/gm,
     function(match, text, link) {
       let isExternalLink = (link.match(/https?:\/\/[^\s]+/g) !== null);
       let isAnotherArticle = (link.match(/\.md/g) !== null);
 
+      // If it is an interal link, pointing to a section of this article
+      if (link[0] === '#') {
+        return `<a href="${link}">`;
+      }
+
       // if the link is to a different file
       if (!isExternalLink && isAnotherArticle) {
         let newLink = formatLink(link);
-        return `<a href="${newLink}">$`;
+        return `<a href="${newLink}">`;
       }
       // for anything else, just leave it unmodified
       return match;
@@ -451,20 +456,36 @@ const getLastModifiedTime = (path) => {
  * to link to
  */
 function formatLink(link){
-  let newLink;
+  let newLink = '';
+  let subsectionLink = '';
   let article = path.basename(link);
-  // console.log(article);
-  let articlePath = link.replace('/' + article, '');
-  // console.log(articlePath);
+  let match = '';
+
+  // If the article link contains a link to a subsection of
+  // that article, then we need to extract the name of that
+  // subsection
+
+  // eslint-disable-next-line no-cond-assign
+  if (match = article.match(/([^#]*)(#.*)/)) {
+    article = match[1];
+    subsectionLink = match[2];
+  }
+
+  // extract the chapter name from the string
+  let chapterName = link.match(/([^/]*)\/.*/)[1];
+
+  // Search through folders and articles for matching article name
   let knownFolders = freshDeskCache.folders;
-  let thisFolder = knownFolders.filter(({folderName}) => folderName === articlePath)[0];
+  let thisFolder = knownFolders.filter(({folderName}) => folderName === chapterName)[0];
   let knownArticles = thisFolder.articles;
   let thisArticle = knownArticles.filter(({articleName}) => articleName === article)[0];
+
+  // If we found a matching article
   if (thisArticle !== undefined){
-    newLink = 'https://' + FRESHDESK_HELPDESK_NAME + '.freshdesk.com/a/solutions/articles/' + thisArticle.articleID;
-    // console.log(newLink);
+    newLink =
+      'https://' + FRESHDESK_HELPDESK_NAME + '.freshdesk.com/a/solutions/articles/' + thisArticle.articleID + subsectionLink;
     return newLink;
-  } else {
+  } else { // else there's nothing we can do with it, return as is.
     return link;
   }
 }
