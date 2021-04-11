@@ -2,9 +2,9 @@
 
 function runCacheFileTest() {
   let categoryCache = {name: undefined, id: undefined};
-  let folderCache = {folder1: 12342, folder2: 1342342};
+  let folderCache = {'Chapter 1': 12342, 'Chapter 2': 1342342};
   // eslint-disable-next-line max-len
-  let articleCache = {articleName1: {id: 1234, folderid: 9999}, articleName2: {id: 3423, folderid: 9334}};
+  let articleCache = {'Article Name 1': {id: 1234, folderid: 9999}, 'Article Name 2': {id: 3423, folderid: 9334}};
 
   console.log(categoryCache.name);
 
