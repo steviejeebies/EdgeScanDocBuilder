@@ -10,6 +10,7 @@ module.exports = {
 const fetch = require('node-fetch');
 const fs = require('fs');
 const showdown = require('showdown');
+const images = require('./images');
 
 const path = require('path');
 
@@ -194,6 +195,7 @@ async function makeFreshDeskStructure(apiEndPoint, content) {
 }
 
 let freshDeskCache; // our cache file, stores info about FreshDesk IDs
+let localImages;
 
 /**
  * This is the main method in freshdesk.js. When passed a directory
@@ -250,6 +252,7 @@ async function uploadFiles() {
   // and store it in this object.
 
   readOrCreateFreshDeskCacheFile(argv.source);
+  localImages = await images.uploadImages(argv.source);
 
   // We need to get the Catgory name
 
@@ -402,10 +405,16 @@ function htmlLinkRegex(html) {
     function(match, text, link) {
       let isExternalLink = (link.match(/https?:\/\/[^\s]+/g) !== null);
       let isAnotherArticle = (link.match(/\.md/g) !== null);
+      let isImage = (link.match(/\.(gif)|(jpe?g)|(tiff)|(png)|(bmp)$/i) !== null)
 
       // If it is an interal link, pointing to a section of this article
       if (link[0] === '#') {
         return `<a href="${link}">`;
+      }
+
+      // TODO: UNTESTED
+      if (!isExternalLink && isImage) {
+        if (localImages[link]) return `img src="${localImages[link]}"`;
       }
 
       // if the link is to a different file
