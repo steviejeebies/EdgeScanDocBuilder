@@ -9,6 +9,7 @@ module.exports = {
 
 const fetch = require('node-fetch');
 const fs = require('fs');
+const showdown = require('showdown');
 const argv = require('./cli');
 const path = require('path');
 const { FRESHDESK_HELPDESK_NAME } = require('./cli');
@@ -50,10 +51,9 @@ const folderInCategoryAPIEndPoint =
   (category) => baseUrl + `/api/v2/solutions/categories/${category}/folders`;
 
 // We must have a similar strcture for Articles
-// eslint-disable-next-line no-unused-vars
 const articleAPIEndPoint =
   (article) => baseUrl + `/api/v2/solutions/articles/${article}`;
-// eslint-disable-next-line no-unused-vars
+
 const articleInFolderAPIEndPoint =
   (folder) => baseUrl + `/api/v2/solutions/folders/${folder}/articles`;
 
@@ -66,6 +66,8 @@ const categoryPOSTContent = function(name) { return {name: name}; };
 const folderPOSTContent =
   function(name) { return {name: name, visibility: 1}; };
 
+// the following is used for uploading a blank document on FreshDesk first,
+// so that we can achieve linking
 const dummyHTML = (article) => {
   return {
     title: path.basename(article, '.md'),
@@ -113,9 +115,9 @@ async function apiCallFreshDesk(method, url, content = undefined) {
  * Uploads HTML formatted to a string to users endpoint
  * See {@link https://developer.freshdesk.com/api/#authentication} for details.
  * @param {Verbs} method The HTTP method to use for the request
- * @param {Number} folderID The ID value can either be the ID of the folder 
+ * @param {Number} folderID The ID value can either be the ID of the folder
  * if this is a POST request (i.e., create a new article in this folder), or
- * it can be an ID for an Article, if this is a PUT request (i.e. update this 
+ * it can be an ID for an Article, if this is a PUT request (i.e. update this
  * article).
  * @param {Object} [content] Object to be sent in the body of the API call
  * @returns {Promise<Object>} The ID of the new article
@@ -190,7 +192,7 @@ async function makeFreshDeskStructure(apiEndPoint, content) {
     .then((result) => { return result.id; });
 }
 
-let docHistoryInfo; // our cache file, stores info about FreshDesk IDs
+let freshDeskCache; // our cache file, stores info about FreshDesk IDs
 
 /**
  * This is the main method in freshdesk.js. When passed a directory
@@ -235,7 +237,7 @@ async function uploadFiles() {
   // write this object to a file called '.docbuild.json' when we're done
   // everything, which will be saved in the docs folder.
 
-  // The method 'readOrCreateBackUpFile()' reads this file and stores its
+  // The method 'readOrCreateFreshDeskCacheFile()' reads this file and stores its
   // contents back into 'docHistoryInfo' whenever we start up this app
   // again. 'uploadFiles()' is the main method in the FreskDesk.js file.
   // What it's doing (at the moment) is comparing the current names of
@@ -246,39 +248,45 @@ async function uploadFiles() {
   // equivalent structure on FreshDesk through the API, grab the new ID,
   // and store it in this object.
 
-  readOrCreateBackUpFile(argv.source);
+  readOrCreateFreshDeskCacheFile(argv.source);
+
+  // We need to get the Catgory name
 
   let parts = argv.source.split('/');
   let categoryName;
   let categoryID;
 
-  // if the user has passed a directory like ./docs, then we want
-  // 'docs'. If the user passes in './docs/', then we still want
-  // to recognise this as docs.
   if (parts[parts.length - 1] === '')
     categoryName = parts[parts.length - 2].trim();
   else categoryName = parts[parts.length - 1].trim();
 
-  if (docHistoryInfo.categoryName === categoryName)
-    categoryID = docHistoryInfo.categoryID;
+  // Now we have the Category/Document name, we check our cache for
+  // its ID, or create a Category with this name on FreshDesk, and add
+  // it to our cache
+
+  if (freshDeskCache.categoryName === categoryName)
+    categoryID = freshDeskCache.categoryID;
   else {
     categoryID = await getFreshDeskStructureID(
       categoryAPIEndPoint, categoryPOSTContent(categoryName));
     // If the category name was invalid for our history, then we
     // have to create a new
-    docHistoryInfo.categoryID = categoryID;
-    docHistoryInfo.categoryName = categoryName;
-    docHistoryInfo.folders = [];
+    freshDeskCache.categoryID = categoryID;
+    freshDeskCache.categoryName = categoryName;
+    freshDeskCache.folders = [];
   }
+
+  // Now we need to know the names of all the Chapters/Folders in this
+  // Category/Document.
 
   let chapters = getChapterNamesInDirectory(argv.source);
   let numChapters = chapters.length;
   let chapterCount = 0;
 
-  if (docHistoryInfo.folders === undefined)
-    docHistoryInfo.folders = [];
+  if (freshDeskCache.folders === undefined)
+    freshDeskCache.folders = [];
 
-  let knownFolders = docHistoryInfo.folders;
+  let knownFolders = freshDeskCache.folders;
 
   // new loop here, so that article & folder IDs already generated (for purposes of linking)
   for (const chapter of chapters) {
@@ -295,6 +303,7 @@ async function uploadFiles() {
           folderID: folderID,
           articles: [],
         });
+
       thisFolder = knownFolders[knownFolders.length - 1];
     } else folderID = thisFolder.folderID;
 
@@ -351,16 +360,11 @@ async function uploadFiles() {
       }
     }
   }
-  // this will be at the very end of the upload files method,
-  // maybe we can make it its own function to make it cleaner
-  fs.writeFileSync(argv.source + logFileName,
-    JSON.stringify(docHistoryInfo, null, 4));
+  updateFreshDeskCacheFile();
 }
 
+
 function uploadData(chapters, knownFolders){
-  const showdown = require('showdown');
-  fs.writeFileSync(argv.source + logFileName,
-    JSON.stringify(docHistoryInfo, null, 4));
   for (const chapter of chapters) {
     let thisFolder =
       knownFolders.filter(({folderName}) => folderName === chapter)[0];
@@ -375,46 +379,25 @@ function uploadData(chapters, knownFolders){
     for (const article of localArticles) {
       let thisArticle =
       uploadedArticles.filter(({articleName}) => articleName === article)[0];
-      console.log(thisArticle);
+      // console.log(thisArticle);
       let fileLastModified = getLastModifiedTime(
         argv.source + '/' + chapter + '/' + article);
 
       if (article.lastModified !== fileLastModified) {
-      // convert MD file to HTML and update version on FreshDesk API
+        // convert MD file to HTML and put update version on FreshDesk API
 
-        // same as above, but we 'PUT' instead of 'POST' to update
-        // Note: I might have to make a small change to the articleUpload()
-        // method so that it accepts an Article ID, but for the time
-        // being, if its just uploading duplicate articles, it's fine
         let converter = new showdown.Converter();
         converter.setOption('tables', true);
         converter.setOption('simpleLineBreaks', true);
         let desc = converter.makeHtml(fs.readFileSync(argv.source + '/' + chapter + '/' + article, 'utf-8'));
 
-        desc = desc.replace(
-          /<a\s+(?:[^>]*?\s+)?href=(["'])(.*?)\1>/gm,
-          function(match, text, link) {
-            let isExternalLink = (link.match(/https?:\/\/[^\s]+/g) !== null);
-            let isAnotherArticle = (link.match(/\.md/g) !== null);
-
-            // this mightn't work
-            if (link[0] === '#') {
-              return `<a href="#${link}">${text}</a>`;
-            }
-            // if the link is to a different file
-            if (!isExternalLink && isAnotherArticle) {
-              let newLink = formatLink(link);
-              return `<a href="${newLink}">$`;
-            }
-            // for anything else, just leave it unmodified
-            return match;
-          });
+        let htmlToUpload = htmlRegexLinks(desc);
 
         // console.log(desc);
 
         let content = {
           title: path.basename(article, '.md'),
-          description: desc,
+          description: htmlToUpload,
           status: 1,
         };
 
@@ -423,6 +406,23 @@ function uploadData(chapters, knownFolders){
       }
     }
   }
+}
+
+function htmlRegexLinks(inputHTML) {
+  return inputHTML.replace(
+    /<a\s+(?:[^>]*?\s+)?href=(["'])(.*?)\1>/gm,
+    function(match, text, link) {
+      let isExternalLink = (link.match(/https?:\/\/[^\s]+/g) !== null);
+      let isAnotherArticle = (link.match(/\.md/g) !== null);
+
+      // if the link is to a different file
+      if (!isExternalLink && isAnotherArticle) {
+        let newLink = formatLink(link);
+        return `<a href="${newLink}">$`;
+      }
+      // for anything else, just leave it unmodified
+      return match;
+    });
 }
 
 const getChapterNamesInDirectory = source =>
@@ -442,19 +442,27 @@ const getLastModifiedTime = (path) => {
   return stats.mtime;
 };
 
+/**
+ * If our document is trying to link to another article on FreshDesk,
+ * this function will find that article ID (in our cache) and format
+ * it so that it becomes a working link
+ * @param {String} link the MD article link
+ * @returns {String} The URL of the article that the document is trying
+ * to link to
+ */
 function formatLink(link){
   let newLink;
   let article = path.basename(link);
-  console.log(article);
+  // console.log(article);
   let articlePath = link.replace('/' + article, '');
-  console.log(articlePath);
-  let knownFolders = docHistoryInfo.folders;
+  // console.log(articlePath);
+  let knownFolders = freshDeskCache.folders;
   let thisFolder = knownFolders.filter(({folderName}) => folderName === articlePath)[0];
   let knownArticles = thisFolder.articles;
   let thisArticle = knownArticles.filter(({articleName}) => articleName === article)[0];
   if (thisArticle !== undefined){
     newLink = 'https://' + FRESHDESK_HELPDESK_NAME + '.freshdesk.com/a/solutions/articles/' + thisArticle.articleID;
-    console.log(newLink);
+    // console.log(newLink);
     return newLink;
   } else {
     return link;
@@ -496,14 +504,20 @@ function formatLink(link){
 //   ]
 // }
 
-function readOrCreateBackUpFile(docFolder) {
+function readOrCreateFreshDeskCacheFile(docFolder) {
   try {
     let data = fs.readFileSync(docFolder + logFileName);
-    docHistoryInfo = JSON.parse(data);
+    freshDeskCache = JSON.parse(data);
   } catch (err) {
     // if file does not exist, we make an empty file
-    docHistoryInfo = {};
+    freshDeskCache = {};
     fs.writeFileSync(docFolder + logFileName,
-      JSON.stringify(docHistoryInfo, null, 4));
+      JSON.stringify(freshDeskCache, null, 4));
   }
 }
+
+function updateFreshDeskCacheFile() {
+  fs.writeFileSync(argv.source + logFileName,
+    JSON.stringify(freshDeskCache, null, 4));
+}
+
