@@ -10,6 +10,7 @@ module.exports = {
 const fetch = require('node-fetch');
 const fs = require('fs');
 const argv = require('./cli');
+const path = require('path');
 const { FRESHDESK_HELPDESK_NAME } = require('./cli');
 
 const logFileName = '/.docbuild.json';
@@ -50,7 +51,8 @@ const folderInCategoryAPIEndPoint =
 
 // We must have a similar strcture for Articles
 // eslint-disable-next-line no-unused-vars
-const articleAPIEndPoint = baseUrl + '/api/v2/solutions/articles';
+const articleAPIEndPoint =
+  (article) => baseUrl + `/api/v2/solutions/articles/${article}`;
 // eslint-disable-next-line no-unused-vars
 const articleInFolderAPIEndPoint =
   (folder) => baseUrl + `/api/v2/solutions/folders/${folder}/articles`;
@@ -63,6 +65,14 @@ const categoryPOSTContent = function(name) { return {name: name}; };
 
 const folderPOSTContent =
   function(name) { return {name: name, visibility: 1}; };
+
+const dummyHTML = (article) => {
+  return {
+    title: path.basename(article, '.md'),
+    description: '<h1>PLACEHOLDER FILE</h1>',
+    status: 1,
+  };
+};
 
 /**
  * @typedef {('POST'|'GET'|'PUT'|'DELETE')} Verbs
@@ -103,12 +113,20 @@ async function apiCallFreshDesk(method, url, content = undefined) {
  * Uploads HTML formatted to a string to users endpoint
  * See {@link https://developer.freshdesk.com/api/#authentication} for details.
  * @param {Verbs} method The HTTP method to use for the request
- * @param {Number} folderID the ID that FreshDesk has assigned the folder
+ * @param {Number} folderID The ID value can either be the ID of the folder 
+ * if this is a POST request (i.e., create a new article in this folder), or
+ * it can be an ID for an Article, if this is a PUT request (i.e. update this 
+ * article).
  * @param {Object} [content] Object to be sent in the body of the API call
  * @returns {Promise<Object>} The ID of the new article
  */
-function articleUpload(method, folderID, content) {
-  let articleUploadURL = articleInFolderAPIEndPoint(folderID);
+function articleUpload(method, id, content) {
+  let articleUploadURL;
+  if (method === 'POST')
+    articleUploadURL = articleInFolderAPIEndPoint(id);
+  else if (method === 'PUT')
+    articleUploadURL = articleAPIEndPoint(id);
+  else throw new Error('articleUploads "method" parameter should be "PUT" or "POST"');
 
   const options = {
     method: method,
@@ -118,7 +136,7 @@ function articleUpload(method, folderID, content) {
 
   return fetch(articleUploadURL, options)
     .then(res => res.json())
-    .then(json => json.id) // returning ID of the article
+    .then(json => { return json.id; }) // returning ID of the article
     // pretty useless message atm, will need updating later
     .catch(err => console.log(err));
 }
@@ -181,7 +199,6 @@ let docHistoryInfo; // our cache file, stores info about FreshDesk IDs
  */
 
 async function uploadFiles() {
-  const path = require('path');
   // For our documents, we have a folder structure of
   // document/chapters/markdown-file. But FreshDesk has its own names for
   // this hierarchy. It's really important you remember this, because the
@@ -299,13 +316,8 @@ async function uploadFiles() {
       if (thisArticle === undefined) {
         // if no matching article was found
         // convert MD file to HTML and upload new article to FreshDesk
-        let content = {
-          title: path.basename(article, '.md'),
-          description: '<h1>PLACEHOLDER FILE</h1>',
-          status: 1,
-        };
 
-        articleUpload('POST', folderID, content)
+        articleUpload('POST', folderID, dummyHTML(article))
 
         // The parameters here are:
         // * 'POST' - tells FreshDesk we're uploading a brand new article
@@ -347,7 +359,6 @@ async function uploadFiles() {
 
 function uploadData(chapters, knownFolders){
   const showdown = require('showdown');
-  const path = require('path');
   fs.writeFileSync(argv.source + logFileName,
     JSON.stringify(docHistoryInfo, null, 4));
   for (const chapter of chapters) {
@@ -385,6 +396,11 @@ function uploadData(chapters, knownFolders){
           function(match, text, link) {
             let isExternalLink = (link.match(/https?:\/\/[^\s]+/g) !== null);
             let isAnotherArticle = (link.match(/\.md/g) !== null);
+
+            // this mightn't work
+            if (link[0] === '#') {
+              return `<a href="#${link}">${text}</a>`;
+            }
             // if the link is to a different file
             if (!isExternalLink && isAnotherArticle) {
               let newLink = formatLink(link);
@@ -402,7 +418,7 @@ function uploadData(chapters, knownFolders){
           status: 1,
         };
 
-        articleUpload('POST', folderID, content); //Should be 'PUT', but updating doesn't seem to be working for me
+        articleUpload('PUT', thisArticle.articleID, content);
         thisArticle.lastModified = fileLastModified;
       }
     }
@@ -427,9 +443,8 @@ const getLastModifiedTime = (path) => {
 };
 
 function formatLink(link){
-  const path = path;
   let newLink;
-  let article = path.basename(link, '.md');
+  let article = path.basename(link);
   console.log(article);
   let articlePath = link.replace('/' + article, '');
   console.log(articlePath);
