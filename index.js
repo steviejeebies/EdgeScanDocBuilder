@@ -3,11 +3,10 @@
 'use strict';
 
 const argv = require('./app/cli');
-const fs = require('fs');
 
-if(argv.test) {
-  let images = require('./app/images');
-  images.uploadImages('./docs');
+if (argv.test) {
+  let cacheFileTest = require('./app/cachefiletest.js');
+  cacheFileTest.runCacheFileTest();
 }
 
 if (argv.pdf) {

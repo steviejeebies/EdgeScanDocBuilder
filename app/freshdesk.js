@@ -405,7 +405,7 @@ function htmlLinkRegex(html) {
     function(match, text, link) {
       let isExternalLink = (link.match(/https?:\/\/[^\s]+/g) !== null);
       let isAnotherArticle = (link.match(/\.md/g) !== null);
-      let isImage = (link.match(/\.(gif)|(jpe?g)|(tiff)|(png)|(bmp)$/i) !== null)
+      let isImage = (link.match(/\.(gif)|(jpe?g)|(tiff)|(png)|(bmp)$/i) !== null);
 
       // If it is an interal link, pointing to a section of this article
       if (link[0] === '#') {
