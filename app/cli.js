@@ -10,6 +10,10 @@ module.exports = yargs
   .env()
 
   // Global options
+  .option('test', {
+    description: 'test',
+    type: 'boolean',
+  })
   .option('source', {
     description: 'The source folder containing the markdown documents',
     default: './docs',
