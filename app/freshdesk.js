@@ -443,21 +443,38 @@ const getLastModifiedTime = (path) => {
   return stats.mtime;
 };
 
+
 function formatLink(link){
-  let newLink;
+  let newLink = '';
+  let subsectionLink = '';
   let article = path.basename(link);
-  console.log(article);
-  let articlePath = link.replace('/' + article, '');
-  console.log(articlePath);
+  let match = '';
+
+  // If the article link contains a link to a subsection of
+  // that article, then we need to extract the name of that
+  // subsection
+
+  // eslint-disable-next-line no-cond-assign
+  if (match = article.match(/([^#]*)(#.*)/)) {
+    article = match[1];
+    subsectionLink = match[2];
+  }
+
+  // extract the chapter name from the string
+  let chapterName = link.match(/([^/]*)\/.*/)[1];
+
+  // Search through folders and articles for matching article name
   let knownFolders = freshDeskCache.folders;
-  let thisFolder = knownFolders.filter(({folderName}) => folderName === articlePath)[0];
+  let thisFolder = knownFolders.filter(({folderName}) => folderName === chapterName)[0];
   let knownArticles = thisFolder.articles;
   let thisArticle = knownArticles.filter(({articleName}) => articleName === article)[0];
+
+  // If we found a matching article
   if (thisArticle !== undefined){
-    newLink = 'https://' + FRESHDESK_HELPDESK_NAME + '.freshdesk.com/a/solutions/articles/' + thisArticle.articleID;
-    console.log(newLink);
+    newLink =
+      'https://' + FRESHDESK_HELPDESK_NAME + '.freshdesk.com/a/solutions/articles/' + thisArticle.articleID + subsectionLink;
     return newLink;
-  } else {
+  } else { // else there's nothing we can do with it, return as is.
     return link;
   }
 }
