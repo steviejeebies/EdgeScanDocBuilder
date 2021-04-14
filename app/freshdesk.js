@@ -413,8 +413,12 @@ function htmlLinkRegex(html) {
       }
 
       // TODO: UNTESTED
+      if (!isExternalLink && isImage && localImages[link]) {
+        return `<img src="${localImages[link]}>`;
+      }
+
       if (!isExternalLink && isImage) {
-        if (localImages[link]) return `img src="${localImages[link]}"`;
+        return `<img src="${localImages[link]}>`;
       }
 
       // if the link is to a different file
