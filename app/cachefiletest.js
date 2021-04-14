@@ -17,6 +17,8 @@ function runCacheFileTest() {
   // eslint-disable-next-line max-len
   let articleCache = {'Article Name 1': {id: 1234, folderid: 9999, lastModified: 'somedate'}, 'Article Name 2': {id: 3423, folderid: 9334, lastModified: 'somedate'}};
 
+  // imageCache = {'image directory': 'url to image'};
+
   // This is just to show how quick we can search for Categories/Folders/IDs
   // now, no need for any for-loops in FreshDesk.js
 
@@ -42,38 +44,78 @@ function runCacheFileTest() {
   const renderer = new marked.Renderer();
 
   renderer.link = (href, title, text) => {
-    if (href.match(/^\$\$(\/)|(\\)/)) {
-      // eslint-disable-next-line max-len
-      href = 'POINTING TO RIGHT AREA'; // this should point to the updated equivalent of formatLink() in FreshDesk.js
+
+    let internalLink = href.match(/^\$\$\/[^/]*\/?([^#]*)(#(.*))?/);
+    let sectionLinkOnly = href.match(/^#(.*)$/);
+    // if it is a valid internal link, then this will produce
+    // an array in the form
+    // internalLink[1] = "article name"
+    // if(internalLink[2]), then section is specified
+    // internalLink[3] = "section name"
+
+    // if it is an internal document
+    if (sectionLinkOnly) {
+      // if a section link is specified an nothing else"
+      href = '#DOCBUILD' + sectionLinkOnly[1]
+        .toLowerCase()
+        .replace(/[^\w]/g, '');
     }
-    // for anything else (including #something links), just leave it unmodified
-    return `<a href="${href}" title=${title}>${text}</a>`;
+    else if (internalLink) {
+      // eslint-disable-next-line no-unused-vars
+      let articleName = internalLink[1];
+      let sectionIsSpecified = internalLink[2]; // boolean
+      let sectionName = internalLink[3];
+
+      // we need to change the formatting of the section string so
+      // that the ID of "#This is a Heading" in HTML is
+      // id="#DOCBUILDthisisaheading", we need it to be unique
+      // because we don't know how FreshDesk is going to modify
+      // the IDs when it renders it in HTML
+      if (sectionIsSpecified) {
+        sectionName =
+          '#DOCBUILD' + text
+            .toLowerCase()
+            .replace(/[^\w]/g, '');
+      }
+      else sectionName = ''; // if no section is specified, we leave this blank
+
+      // dummy value, look at comment:
+      let articleID = 1234567890; // articleCache[articleName]
+
+      // !!!remove this next line when adding to freshdesk.js!!!
+      let helpdeskName = 'dummyvalue';
+
+      // eslint-disable-next-line max-len
+      href = 'https://' + helpdeskName + '.freshdesk.com/a/solutions/articles/' + articleID + sectionName;
+
+    }
+    // for anything else, just leave it unmodified
+    return `<a href="${href}">${text}</a>`;
   };
+
+  // For when the MD file contains an image link:
 
   renderer.image = (href, title, text) => {
     // checking if our link starts with "$$/", i.e. it is an
     // internal link
-    let regex = href.match(/(^\$\$(\/)|(\\))/);
-    if (!regex) return 'unmodified link';
+    let imgLink = href.match(/^\$\$\/(.*)/);
+    if (imgLink) href = 'imageURL'; // replace this with imageCache[imgLink[1]];
 
-    // replace the $$/ at the start
-    href = href.replace(regex[0], '');
+    return `<img src=${href} title="${title}">${text}</img>`;
+  };
 
-    // We're going to set a rule that all images in the documentation
-    // have to be uniquely named, this is arbitrary
-    // but makes the following code a bit easier to read
+  // For when the MD file contains an heading, we need to
+  // modify it's ID for the HTML
+  renderer.heading = (text, level) => {
+    let updatedHeaderID =
+      'DOCBUILD' + text
+        .toLowerCase()
+        .replace(/[^\w]/g, '');
 
-    // The link will either be in the form "chapter/image", or "image".
-    let splitLink = href.match(/([^/]*)\/(.*)/);
-
-    // if link is 'something/abc', then this will get 'abc'. If link
-    // is 'something', then this will get 'something'
-    // eslint-disable-next-line no-unused-vars
-    let imageName = (Array.isArray(splitLink) && splitLink[2])
-      ? splitLink[2] : splitLink;
-
-    // check cache for image
-    // return <img src= "found image link...."></img>
+    return `
+      <h${level} id="${updatedHeaderID}">
+              ${text}
+      </h${level}>`;
   };
 
   marked.use({ renderer });
