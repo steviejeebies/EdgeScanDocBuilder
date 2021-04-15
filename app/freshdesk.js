@@ -526,20 +526,20 @@ function formatLink(link){
 //   ]
 // }
 
-function readOrCreateFreshDeskCacheFile(docFolder) {
-  try {
-    let data = fs.readFileSync(docFolder + logFileName);
-    freshDeskCache = JSON.parse(data);
-  } catch (err) {
-    // if file does not exist, we make an empty file
-    freshDeskCache = {};
-    fs.writeFileSync(docFolder + logFileName,
-      JSON.stringify(freshDeskCache, null, 4));
-  }
-}
+// function readOrCreateFreshDeskCacheFile(docFolder) {
+//   try {
+//     let data = fs.readFileSync(docFolder + logFileName);
+//     freshDeskCache = JSON.parse(data);
+//   } catch (err) {
+//     // if file does not exist, we make an empty file
+//     freshDeskCache = {};
+//     fs.writeFileSync(docFolder + logFileName,
+//       JSON.stringify(freshDeskCache, null, 4));
+//   }
+// }
 
-function updateFreshDeskCacheFile() {
-  fs.writeFileSync(argv.source + logFileName,
-    JSON.stringify(freshDeskCache, null, 4));
-}
+// function updateFreshDeskCacheFile() {
+//   fs.writeFileSync(argv.source + logFileName,
+//     JSON.stringify(freshDeskCache, null, 4));
+// }
 
