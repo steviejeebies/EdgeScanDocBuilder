@@ -7,6 +7,11 @@ module.exports={
 
   const fs = require('fs');
   const logFileName = '/.docbuild.json';
+  const logFolderName = '/.folderCache.json';
+  const logCategoryName = '/.categoryCache.json';
+  const argv = require('./cli');
+  
+  let freshDeskCache;
   exports.categoryCache ={
       name: 'Document Name',
       id: 2198791
@@ -30,22 +35,22 @@ module.exports={
   
 
  
-
+ // I believe there is something wrong here and I am not really properly addressing it  
  function readOrCreateFreshDeskCacheFile(docFolder) {
     try {
-      let data = fs.readFileSync(docFolder + logFileName);
+      let data = fs.readFileSync(docFolder + logFileName+ logFolderName +logCategoryName );
       freshDeskCache = JSON.parse(data);
     } catch (err) {
       // if file does not exist, we make an empty file
-      freshDeskCache = {};
-      fs.writeFileSync(docFolder + logFileName,
+      freshDeskCache ={};
+      fs.writeFileSync(docFolder + logFileName + logFolderName + logCategoryName ,
         JSON.stringify(freshDeskCache, null, 4));
     }
     return freshDeskCache;
   }
 
   function updateFreshDeskCacheFile() {
-    return fs.writeFileSync(argv.source + logFileName,
+    return fs.writeFileSync(argv.source + logFileName + logFolderName + logCategoryName ,
       JSON.stringify(freshDeskCache, null, 4));
   }
 
