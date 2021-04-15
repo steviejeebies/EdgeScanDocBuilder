@@ -2,8 +2,12 @@
 const marked = require('marked');
 const fs = require('fs');
 
+let cache = require('./FreshDeskCacheFile');
 
 function runCacheFileTest() {
+  let category=cache.categoryCache;
+  let folder=cache.folderCache;
+  let article=cache.articleCache;
 
   // We're going to go with 4 cache files instead of 1, this will make
   // searching for cache stuff a lot easier, and make FreshDesk.js run
@@ -12,27 +16,28 @@ function runCacheFileTest() {
 
   // It'll have the general structure of below:
 
-  let categoryCache = {name: 'Document Name', id: 2198791};
-  let folderCache = {'Chapter 1': 12342, 'Chapter 2': 1342342};
-  // eslint-disable-next-line max-len
-  let articleCache = {'Article Name 1': {id: 1234, folderid: 9999, lastModified: 'somedate'}, 'Article Name 2': {id: 3423, folderid: 9334, lastModified: 'somedate'}};
+  // let categoryCache = {name: 'Document Name', id: 2198791};
+  // let folderCache = {'Chapter 1': 12342, 'Chapter 2': 1342342};
+  // //eslint-disable-next-line max-len
+  // let articleCache = {'Article Name 1': {id: 1234, folderid: 9999, lastModified: 'somedate'}, 'Article Name 2': {id: 3423, folderid: 9334, lastModified: 'somedate'}};
 
   // imageCache = {'image directory': 'url to image'};
 
   // This is just to show how quick we can search for Categories/Folders/IDs
   // now, no need for any for-loops in FreshDesk.js
 
-  console.log(categoryCache.name);
-  console.log(categoryCache.id);
 
-  console.log(folderCache['folder1']);
-  console.log(folderCache['folder2']);
+  console.log(category.name);
+  console.log(category.id);
 
-  console.log(articleCache['Article Name 1'].id);
-  console.log(articleCache['Article Name 1'].folderid);
+  console.log(folder['folder1']);
+  console.log(folder['folder2']);
 
-  console.log(articleCache['Article Name 2'].id);
-  console.log(articleCache['Article Name 2'].folderid);
+  console.log(article['Article Name 1'].id);
+  console.log(article['Article Name 1'].folderid);
+
+  console.log(article['Article Name 2'].id);
+  console.log(article['Article Name 2'].folderid);
 
 
   // The following is the code we need to switch from Showdown to Marked
