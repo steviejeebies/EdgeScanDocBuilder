@@ -30,7 +30,7 @@ async function docbuildPDF() {
       margin: {
         top: '5mm',
         right: '5mm',
-        bottom: '5mm',
+        bottom: '10mm',
         left: '5mm',
       },
       displayHeaderFooter: argv['pdf-headerfooter'],

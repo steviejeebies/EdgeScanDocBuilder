@@ -5,7 +5,7 @@
 // uploading images through their API. Edgescan may not
 // want the images from their documentation
 // on a different/public site, which means this file
-// is likely a temporary fix.
+// is likely a temporary fix, hence the quick/lazy
 
 const glob = require('glob');
 const imgbbUploader = require('imgbb-uploader');
