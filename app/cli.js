@@ -101,7 +101,7 @@ module.exports = yargs
   // No use for this
   // .options({
   //   html: {
-  //     description: 'Test command during development, produces HTML files only',
+  //   description: 'Test command during development, produces HTML files only',
   //     type: 'boolean',
   //   },
   //   html_destination: {
