@@ -176,12 +176,8 @@ function addOnlineFoldersToLocalCache(categoryID) {
 
   return apiCallFreshDesk('GET', apiEndPoint)
     .then(
-      structuresFound => {
-        // We've just asked FreshDesk to give us all the folders
-        // it current has. To save on API calls in the future, we
-        // will use this responce to immediately add to our cache
-        // file.
-        structuresFound.forEach(onlineFolder => {
+      onlineFoldersFound => {
+        onlineFoldersFound.forEach(onlineFolder => {
           cache.folderCache[onlineFolder.name] = onlineFolder.id;
         });
       });
@@ -192,12 +188,8 @@ function addOnlineArticlesToLocalCache(folderID) {
 
   return apiCallFreshDesk('GET', apiEndPoint)
     .then(
-      articlesFound => {
-        // We've just asked FreshDesk to give us all the articles
-        // in the specified folder. To save on API calls in the
-        // future, we will use this responce to immediately add
-        // to our cache file.
-        articlesFound.forEach(onlineArticle => {
+      onlineArticleFound => {
+        onlineArticleFound.forEach(onlineArticle => {
           if (cache.articleCache[onlineArticle.title] === undefined)
             cache.articleCache[onlineArticle.title] = {};
           cache.articleCache[onlineArticle.title].id = onlineArticle.id;
@@ -217,6 +209,7 @@ function addOnlineArticlesToLocalCache(folderID) {
     .catch(() => {
       console.log(`DocBuild searched for folder ${folderID} on FreskDesk, but nothing was found. 
       Check your portal or the .DOCBUILD_folderCache.json cache file.`);
+      console.log(`Removing ${folderID} from cache file.`);
       removeFromCache(cache.folderCache, folderID);
     });
 }
@@ -260,10 +253,7 @@ async function uploadFiles() {
   if (cache.categoryCache[categoryName])
     categoryID = cache.categoryCache[categoryName];
   else {
-    // we'll set categoryID and equivalent area in the cache
-    // at the same time
-    categoryID = cache.categoryCache[categoryName] =
-      await getFreshDeskCategoryID(categoryName);
+    categoryID = cache.categoryCache[categoryName] = await getFreshDeskCategoryID(categoryName);
   }
 
   let folderNames = getChapterNamesInDirectory(argv.source);
@@ -272,15 +262,11 @@ async function uploadFiles() {
 
   for (const thisFolder of folderNames) {
     if (!cache.folderCache[thisFolder]) {
-
-      // We'll only check online once, and only if one of our local
-      // folders wasn't found in cache, this saves on API calls
       if (!checkedOnline) {
         await addOnlineFoldersToLocalCache(categoryID);
         checkedOnline = true;
 
-        // If we found one online and it has been added to cache,
-        // we can move on
+        // If we found one online and it has been added to cache, we can move on
         if (cache.folderCache[thisFolder]) continue;
       }
 
@@ -323,11 +309,6 @@ async function uploadFiles() {
 
   let dummyArticlePromises = [];
 
-  // The following object is a bit of a quick hack,
-  // it keeps track of which folders we have asked
-  // FreshDesk for the articles of, so that we don't
-  // make redundant API calls
-
   let onlineFoldersChecked = {};
 
   for (const articleName of Object.keys(cache.articleCache)) {
@@ -340,8 +321,7 @@ async function uploadFiles() {
       onlineFoldersChecked[folderID] = true;
     }
 
-    // If we found one online and it has been added to cache,
-    // we can move on
+    // If we found one online and it has been added to cache, can move on
     if (cache.articleCache[articleName].id) continue;
     // If there is still no ID value set for this article, then there is no
     // online version - we need to upload a dummy article. We won't set the
@@ -377,7 +357,7 @@ async function uploadFiles() {
   // iterate through all the articles, and find out which ones either have
   // lastModified set to undefined (i.e. only a dummy article is present),
   // or lastModified is out of date (local file has been modified since last
-  // run). In both cases, this will be a PUT articleUpload.
+  // run). In both cases, this will be a PUT articleUpload().
 
   let fullArticlePromises = [];
 
@@ -385,6 +365,7 @@ async function uploadFiles() {
     let articleObj = cache.articleCache[articleName];
     let localLastModified;
 
+    // If an article in cache is not present locally, we just skip
     if (articleObj.directory === undefined) return;
 
     localLastModified = getLastModifiedTime(articleObj.directory);
@@ -395,17 +376,17 @@ async function uploadFiles() {
       if (articleObj.lastModified !== undefined)
         console.log(`${articleName} has been modified locally, updating on FreshDesk...`);
 
-      // This next line could be a bit wonky - updating the
-      // lastModified value for the article now, as it would be very
-      // awkward to pass it back and forward through all the
-      // function calls. But if there is an error and the updated
-      // article isn't *actually* uploaded to FreshDesk, then this
-      // lastModified value will be wrong.
       let content = {
         title: path.basename(articleName, '.md'),
         description: articleHTML,
         status: 1,
       };
+
+      // This next line could be a bit wonky - updating the lastModified value
+      // for the article now, as it would be very awkward to pass it back and
+      // forward through all the function calls. But if there is an error and
+      // the updated article isn't *actually* uploaded to FreshDesk, then this
+      // lastModified value will be wrong.
       cache.articleCache[articleName].lastModified = localLastModified;
       fullArticlePromises.push(articleUpload('PUT', articleObj.id, content));
     }
