@@ -3,11 +3,11 @@
 'use strict';
 
 const argv = require('./app/cli');
+const path = require('path');
+const glob = require('glob');
 
 if (argv.test) {
-  let cache = require('./app/cacheFreshDesk.js');
-  cache.readOrCreateFreshDeskCacheFile();
-  cache.updateFreshDeskCacheFile();
+  
 }
 
 if (argv.pdf) {

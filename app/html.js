@@ -6,6 +6,7 @@
 const marked = require('marked');
 const renderer = new marked.Renderer();
 const fs = require('fs');
+const path = require('path');
 
 // importing cache, so that we don't need to pass it
 // as a parameter from FreshDesk.js
@@ -30,7 +31,7 @@ renderer.link = (href, title, text) => {
       .replace(/[^\w]/g, '');
   } else if (internalLink) { // if it is an internal document
     // eslint-disable-next-line no-unused-vars
-    let articleName = internalLink[1];
+    let articleName = path.basename(internalLink[1], '.md');
     let sectionIsSpecified = internalLink[2]; // boolean
     let sectionName = internalLink[3];
 
@@ -41,17 +42,19 @@ renderer.link = (href, title, text) => {
     // the IDs when it renders it in HTML
     if (sectionIsSpecified) {
       sectionName =
-        '#DOCBUILD' + text
+        '#DOCBUILD' + sectionName
           .toLowerCase()
           .replace(/[^\w]/g, '');
     } else sectionName = ''; // if no section specified, we leave this blank
 
-    let articleID = cache.articleCache[articleName].id;
+    if (cache.articleCache[articleName]) {
+      let articleID = cache.articleCache[articleName].id;
 
-    // FRESHDESK SPECIFIC:
-    let helpdeskName = process.env.FRESHDESK_HELPDESK_NAME;
-    // eslint-disable-next-line max-len
-    href = 'https://' + helpdeskName + '.freshdesk.com/a/solutions/articles/' + articleID + sectionName;
+      // FRESHDESK SPECIFIC:
+      let helpdeskName = process.env.FRESHDESK_HELPDESK_NAME;
+      // eslint-disable-next-line max-len
+      href = 'https://' + helpdeskName + '.freshdesk.com/a/solutions/articles/' + articleID + sectionName;
+    }
   }
   // for anything else, just leave it unmodified
 

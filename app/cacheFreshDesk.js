@@ -41,12 +41,14 @@ const argv = require('./cli');
 // exports.articleCache = {
 //   'Article Name 1': {
 //     id: 1234,
-//     folderid: 9999,
+//     folderID: 9999,
 //     lastModified: 'somedate',
+//     directory: './docs/chapter/thisArticle.md',
+
 //   },
 //   'Article Name 2': {
 //     id: 3423,
-//     folderid: 9334,
+//     folderID: 9334,
 //     lastModified: 'somedate',
 //   },
 // };
