@@ -10,25 +10,32 @@
 const glob = require('glob');
 const imgbbUploader = require('imgbb-uploader');
 
-// this is just for a throwaway account, doesn't matter
-// if token is public on GitHub
+// this is just for a throwaway account, 0 private
+// info on it, doesn't matter if token is public on GitHub
 const imgBBToken = '3d083719235d5d9fb11ec9cf902fb954';
 
 let fileTypes = 'gif,jpeg,jpg,tiff,png,bmp,GIF,JPEG,JPG,TIFF,PNG,BMP';
 
-async function uploadImages(directory) {
-  let imageLinks = {};
+async function uploadImages(directory, imageCache) {
 
   let imageLocations = glob.sync(`${directory}/**/*.{${fileTypes}}`);
-  await Promise.allSettled(
-    imageLocations.map(image =>
+
+  // If the image is already in the cache, then we need to remove
+  // it from imageLocations, since we don't want to reupload it for no
+  // reason. When an image is inserted into the cache, the directory
+  // string is removed, hence the awkward replace() call below.
+  let imagesToUpload = imageLocations.filter(
+    loc => !imageCache.hasOwnProperty(loc.replace(directory + '/', '')));
+
+  return Promise.allSettled(
+    imagesToUpload.map(image =>
       imgbbUploader(imgBBToken, image,
       )))
     .then(results => {
       results.forEach((result, num) => {
         if (result.status === 'fulfilled') {
           let link = imageLocations[num].replace(directory + '/', '');
-          imageLinks[link] = result.value.image.url;
+          imageCache[link] = result.value.image.url;
         }
         if (result.status === 'rejected') {
           console.log(
@@ -37,8 +44,6 @@ async function uploadImages(directory) {
         }
       });
     });
-
-  return imageLinks;
 }
 
 module.exports = {

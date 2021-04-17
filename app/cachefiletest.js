@@ -5,9 +5,9 @@ const fs = require('fs');
 let cache = require('./FreshDeskCacheFile');
 
 function runCacheFileTest() {
-  let category=cache.categoryCache;
-  let folder=cache.folderCache;
-  let article=cache.articleCache;
+  let category = cache.categoryCache;
+  let folder = cache.folderCache;
+  let article = cache.articleCache;
 
   // We're going to go with 4 cache files instead of 1, this will make
   // searching for cache stuff a lot easier, and make FreshDesk.js run
@@ -18,7 +18,7 @@ function runCacheFileTest() {
 
   // let categoryCache = {name: 'Document Name', id: 2198791};
   // let folderCache = {'Chapter 1': 12342, 'Chapter 2': 1342342};
-  // //eslint-disable-next-line max-len
+  // eslint-disable-next-line max-len
   // let articleCache = {'Article Name 1': {id: 1234, folderid: 9999, lastModified: 'somedate'}, 'Article Name 2': {id: 3423, folderid: 9334, lastModified: 'somedate'}};
 
   // imageCache = {'image directory': 'url to image'};
