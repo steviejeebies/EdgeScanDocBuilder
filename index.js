@@ -4,8 +4,19 @@
 
 const argv = require('./app/cli');
 
+const fs = require('fs');
+const path = require('path');
+
 if (argv.test) {
 
+}
+if (argv['freshdesk-start-fresh']) {
+  // delete the cache file to start over
+  console.log(path.resolve(argv.source + '/.DOCBUILD_articleCache.json'));
+  fs.rmSync(path.resolve(argv.source + '/.DOCBUILD_articleCache.json'));
+  fs.rmSync(path.resolve(argv.source + '/.DOCBUILD_folderCache.json'));
+  fs.rmSync(path.resolve(argv.source + '/.DOCBUILD_categoryCache.json'));
+  fs.rmSync(path.resolve(argv.source + '/.DOCBUILD_imageCache.json'));
 }
 if (argv.pdf) {
   let pdf = require('./app/pdf');

@@ -19,11 +19,12 @@ module.exports = yargs
     default: './docs',
     type: 'string',
   })
-  .option('verbose', {
-    description: 'Provide verbose output from the program',
-    alias: 'v',
-    type: 'boolean',
-  })
+  // No use for this at the moment
+  // .option('verbose', {
+  //   description: 'Provide verbose output from the program',
+  //   alias: 'v',
+  //   type: 'boolean',
+  // })
   .option('stylesheet', {
     description: 'Provide a stylesheet for the markdown document',
     type: 'string',
@@ -97,20 +98,21 @@ module.exports = yargs
   .group(
     ['pdf', 'pdf_destination'],
     'PDF:')
-  .options({
-    html: {
-      description: 'Test command during development, produces HTML files only',
-      type: 'boolean',
-    },
-    html_destination: {
-      description: 'The folder to store the generated HTML',
-      default: './html',
-      type: 'string',
-    },
-  })
-  .group(
-    ['html', 'html_destination'],
-    'HTML:')
+  // No use for this
+  // .options({
+  //   html: {
+  //     description: 'Test command during development, produces HTML files only',
+  //     type: 'boolean',
+  //   },
+  //   html_destination: {
+  //     description: 'The folder to store the generated HTML',
+  //     default: './html',
+  //     type: 'string',
+  //   },
+  // })
+  // .group(
+  //   ['html', 'html_destination'],
+  //   'HTML:')
   .help()
   .alias('help', 'h')
   .showHelpOnFail()
