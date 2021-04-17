@@ -1,0 +1,41 @@
+<!--
+   Kazuhiro Tobita
+   29th March 2021
+   (I'll delete comments and irrelevant examples later)
+-->
+
+<!-- 1. at first, read script out -->
+
+<script type="text/javascript" src="html.js"> // PROB NEED TO CHANGE / wanna bring html text here
+</script>
+
+<!-- 2. pass DOMPurify.sanitize thorugh as displaying -->
+var dirty = '<div><p>text</p><script>alert(' alart ');</script></div>';
+var clean = DOMPurify.sanitize(dirty);
+console.log(clean); // => '<div><p>text</p></div>'
+
+
+<!-- IRRELEVANT EXAMPLES BELOW 
+  just an example how to use DOMpurify in script tag in HTML
+
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.0.7/purify.js"></script>
+  </head>
+  <body>
+    <div>hogehoge</div>
+  </body>
+  <script>
+    console.log(DOMPurify.sanitize('<img src=x onerror=alert(1)//>'))
+    console.log(DOMPurify.sanitize('<svg><g/onload=alert(2)//<p>'))
+    console.log(DOMPurify.sanitize('<p>abc<iframe/\/src=jAva&Tab;script:alert(3)>def'))
+  </script>
+  </html>
+
+-->
+
+
