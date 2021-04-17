@@ -127,7 +127,7 @@ async function apiCallFreshDesk(method, url, content = undefined) {
  */
 async function articleUpload(method, id, content) {
   let articleUploadURL;
-  let articleName = content.name;
+  let articleName = content.title + '.md';
 
   // We need to know if we are creating a new article ('POST'),
   // or updating an already-uploaded article ('PUT').
@@ -145,9 +145,9 @@ async function articleUpload(method, id, content) {
 
   return fetch(articleUploadURL, options)
     .then(res => res.json())
-    // store the article ID returned into the correct area of cache
     .then(json => {
-      return json.id; })
+      return {article: articleName, id: json.id};
+    })
     // pretty useless message atm, will need updating later
     .catch(() => {
       throw new Error(
@@ -199,8 +199,8 @@ function addOnlineArticlesToLocalCache(folderID) {
     .then(
       articlesFound => {
         // We've just asked FreshDesk to give us all the articles
-        // in the specified folder. To save on API calls in the 
-        // future, we will use this responce to immediately add 
+        // in the specified folder. To save on API calls in the
+        // future, we will use this responce to immediately add
         // to our cache file.
         articlesFound.forEach(onlineArticle => {
           cache.articleCache[onlineArticle.name].id = onlineArticle.id;
@@ -332,9 +332,8 @@ async function uploadFiles() {
         if (!cache.articleCache[articleName].id) {
           // we'll gather up all the dummy articles we need
           // to upload into an array and then post them all
-          // after we're done gathering them - should be a
-          // good bit faster.
-          dummyArticlePromises.push(articleUpload('POST', folderID, articleName));
+          // at once - should be a good bit faster.
+          dummyArticlePromises.push(articleUpload('POST', folderID, dummyHTML(articleName)));
         }
       });
   });
@@ -343,10 +342,14 @@ async function uploadFiles() {
     .then(results => {
       results.forEach((result, num) => {
         if (result.status === 'fulfilled') {
-          console.log('FULFILLED!');
+          // Little awkwardly done, but articleUpload() returns an
+          // object that looks like {article: 'article name', id: 1234},
+          // so we just store this in cache
           console.log(result.value);
+          cache.articleCache[result.value.article].id = result.value.id;
         }
         if (result.status === 'rejected') {
+          // Replace with something more useful
           console.log(
             'ERROR POSTING ARTICLE',
           );
