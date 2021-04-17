@@ -55,7 +55,7 @@ const articleInFolderAPIEndPoint =
 
 // Used for printing an uploaded Article's URL on the console:
 const articleURL = (articleID) =>
-  `https://${helpdeskName}.freshdesk.com/a/solutions/articles/${articleID}`
+  `https://${helpdeskName}.freshdesk.com/a/solutions/articles/${articleID}`;
 
 // Required for POST API calls.
 const categoryPOSTContent = function(name) { return {name: name}; };
@@ -449,7 +449,7 @@ const getLastModifiedTime = (path) => {
 // Not ideal, but does the job. Usually we can access/remove and element
 // from cache with cache.cacheName[cacheItem], but in the case of removing
 // a folder from folderCache when we only have folderID value (given folder
-// cache has the structure {folderName: folderID}), then the following 
+// cache has the structure {folderName: folderID}), then the following
 // function was needed.
 
 function removeFromCache(cache, value) {

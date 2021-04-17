@@ -3,13 +3,10 @@
 'use strict';
 
 const argv = require('./app/cli');
-const path = require('path');
-const glob = require('glob');
 
 if (argv.test) {
-  
-}
 
+}
 if (argv.pdf) {
   let pdf = require('./app/pdf');
   pdf.docbuildPDF();
