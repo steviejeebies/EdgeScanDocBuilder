@@ -24,28 +24,26 @@ async function uploadImages(directory, imageCache) {
   // it from imageLocations, since we don't want to reupload it for no
   // reason. When an image is inserted into the cache, the directory
   // string is removed, hence the awkward replace() call below.
+  let imagesToUpload = imageLocations.filter(
+    loc => !imageCache.hasOwnProperty(loc.replace(directory + '/', '')));
 
-
-  console.log(imageLocations);
-  console.log(imageCache);
-
-  // return Promise.allSettled(
-  //   imageLocations.map(image =>
-  //     imgbbUploader(imgBBToken, image,
-  //     )))
-  //   .then(results => {
-  //     results.forEach((result, num) => {
-  //       if (result.status === 'fulfilled') {
-  //         let link = imageLocations[num].replace(directory + '/', '');
-  //         imageCache[link] = result.value.image.url;
-  //       }
-  //       if (result.status === 'rejected') {
-  //         console.log(
-  //           `In images.js: Image ${imageLocations[num]} was rejected by ImgBB`,
-  //         );
-  //       }
-  //     });
-  //   });
+  return Promise.allSettled(
+    imagesToUpload.map(image =>
+      imgbbUploader(imgBBToken, image,
+      )))
+    .then(results => {
+      results.forEach((result, num) => {
+        if (result.status === 'fulfilled') {
+          let link = imageLocations[num].replace(directory + '/', '');
+          imageCache[link] = result.value.image.url;
+        }
+        if (result.status === 'rejected') {
+          console.log(
+            `In images.js: Image ${imageLocations[num]} was rejected by ImgBB`,
+          );
+        }
+      });
+    });
 }
 
 module.exports = {

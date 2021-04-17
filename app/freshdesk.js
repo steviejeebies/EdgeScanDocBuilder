@@ -11,6 +11,7 @@ const fetch = require('node-fetch');
 const fs = require('fs');
 const showdown = require('showdown');
 const images = require('./images');
+const glob = require('glob');
 const cache = require('./cacheFreshDesk');
 
 const path = require('path');
@@ -199,20 +200,49 @@ async function uploadFiles() {
 
   await cache.readOrCreateFreshDeskCacheFile();
   await images.uploadImages(argv.source, cache.imageCache);
-  console.log('image cache');
-  console.log(cache.imageCache);
+
+  // get category name, check if its in cache. If not,
+  // we need to get the ID from FreshDesk
+
+  let parts = argv.source.split('/');
+  let categoryName;
+  let categoryID;
+
+  // Mightn't be necessary, just a failsafe
+  if (parts[parts.length - 1] === '')
+    categoryName = parts[parts.length - 2].trim();
+  else categoryName = parts[parts.length - 1].trim();
+
+  if (cache.categoryCache[categoryName])
+    categoryID = cache.categoryCache[categoryName];
+  else {
+    // we'll set categoryID and equivalent area in the cache
+    // at the same time
+    categoryID = cache.categoryCache[categoryName] =
+      await getFreshDeskStructureID(
+        categoryAPIEndPoint, categoryPOSTContent(categoryName));
+  }
+
+  // just a quick way of getting the the names of the folders in
+  // this directory:
+  let folderNames = fs.readdirSync(argv.source, { withFileTypes: true })
+    .filter(dirent => dirent.isDirectory())
+    .map(dirent => dirent.name);
+
+  for (let i = 0; i < folderNames.length; i++) {
+    if (!cache.folderCache[folderNames[i]])
+      cache.folderCache[folderNames[i]] =
+      await getFreshDeskStructureID(
+        folderInCategoryAPIEndPoint(categoryID), folderPOSTContent(folderNames[i]));
+  }
+
+  
   await cache.updateFreshDeskCacheFile();
 }
 
 //   // We need to get the Catgory name
 
-//   let parts = argv.source.split('/');
-//   let categoryName;
-//   let categoryID;
 
-//   if (parts[parts.length - 1] === '')
-//     categoryName = parts[parts.length - 2].trim();
-//   else categoryName = parts[parts.length - 1].trim();
 
 //   // Now we have the Category/Document name, we check our cache for
 //   // its ID, or create a Category with this name on FreshDesk, and add
