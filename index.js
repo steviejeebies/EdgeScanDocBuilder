@@ -5,8 +5,9 @@
 const argv = require('./app/cli');
 
 if (argv.test) {
-  let cacheFileTest = require('./app/cachefiletest.js');
-  cacheFileTest.runCacheFileTest();
+  let cache = require('./app/cacheFreshDesk.js');
+  cache.readOrCreateFreshDeskCacheFile();
+  cache.updateFreshDeskCacheFile();
 }
 
 if (argv.pdf) {
