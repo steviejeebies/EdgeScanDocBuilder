@@ -37,7 +37,7 @@ We have given some sample documents to test docbuild out. In this folder we have
 
 Within a document, there are a few rules:
 * Linking to another file in this document requires ```$$/``` at the start of the link. See the ```.md``` files in ```ideal_sample_docs``` to see examples of this.
-* All Article names in a document must be unique from each other, Chapter names must be unique from each other, and all Image names in a document msut be unique from each other. If not, this will likely cause overwrites on the FreshDesk website.
+* All Article names in a document must be unique from each other, Chapter names must be unique from each other, and all Image names in a document must be unique from each other. If not, this will likely cause overwrites on the FreshDesk website.
 * The program currently accepts GIF, JPEG, JPG, TIFF, PNG, BMP filetypes for images, see ```images.js```. Since we're using ImgBB, then this can probably be extended to whatever filetypes ImgBB accepts, or whatever image host you chose to use.
 
 See ```docbuild --help``` for an detailed explanation of the flags you can use to customize your run.
