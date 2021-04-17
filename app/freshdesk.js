@@ -9,10 +9,11 @@ module.exports = {
 
 const fetch = require('node-fetch');
 const fs = require('fs');
-const showdown = require('showdown');
+// const showdown = require('showdown');
 const images = require('./images');
-const glob = require('glob');
+// const glob = require('glob');
 const cache = require('./cacheFreshDesk');
+const html = require('./html.js');
 
 const path = require('path');
 const argv = require('./cli');
@@ -203,12 +204,15 @@ function addOnlineArticlesToLocalCache(folderID) {
         // future, we will use this responce to immediately add
         // to our cache file.
         articlesFound.forEach(onlineArticle => {
+          if (cache.articleCache[onlineArticle.name] === undefined)
+            cache.articleCache[onlineArticle.name] = {};
           cache.articleCache[onlineArticle.name].id = onlineArticle.id;
           cache.articleCache[onlineArticle.name].folderid = onlineArticle.folderid;
           // We don't have anything to put into lastModified, so we'll leave this
           // unchanged. There are two scenarios - lastModified is blank after this,
           // which means that we've grabbed an article that isn't present locally,
-          // or is present on the site but this is our first run of docbuild. This
+          // or is present on the website but this is our first run of docbuild so
+          // we have no idea if we need to update the online version or not. This
           // means we will be uploading this file. The other scenario is that we've
           // just redundantly set the ID for a cache value that is already set in
           // cache and there is an valid and untouched lastModified value in that same
@@ -323,7 +327,10 @@ async function uploadFiles() {
 
         if (cache.articleCache[articleName] === undefined)
           cache.articleCache[articleName] = {};
+
         cache.articleCache[articleName].folderid = folderID;
+        cache.articleCache[articleName].directory =
+          (argv.source + '/' + folderName + '/' + articleName);
 
         // If there is still no ID value set for this article, then
         // there is no online version - we need to upload a
@@ -345,7 +352,6 @@ async function uploadFiles() {
           // Little awkwardly done, but articleUpload() returns an
           // object that looks like {article: 'article name', id: 1234},
           // so we just store this in cache
-          console.log(result.value);
           cache.articleCache[result.value.article].id = result.value.id;
         }
         if (result.status === 'rejected') {
@@ -356,6 +362,42 @@ async function uploadFiles() {
         }
       });
     });
+
+  // At this point, all the articles in each folder are present on FreshDesk,
+  // even if the content is just dummy at the moment. So now we need to
+  // iterate through all the articles, and find out which ones either have
+  // lastModified set to undefined (i.e. only a dummy article is present),
+  // or lastModified is out of date (local file has been modified since last
+  // run). In both cases, this will be a PUT articleUpload.
+
+  let fullArticlePromises = [];
+
+  Object.keys(cache.articleCache).forEach(articleName => {
+    let articleObj = cache.articleCache[articleName];
+    let localLastModified = getLastModifiedTime(articleObj.directory);
+
+    if (articleObj.lastModified === undefined || articleObj.lastModified < localLastModified) {
+      // console.log(`NEED TO UPLOAD ${articleObj.directory}`);
+      let articleHTML = html.convertHTML(articleObj.directory);
+      // This next line could be a bit wonky - updating the
+      // lastModified value for the article now, as it would be very
+      // awkward to pass it back and forward through all the
+      // function calls. But if there is an error and the updated
+      // article isn't *actually* uploaded to FreshDesk, then this
+      // lastModified value will be wrong.
+      let content = {
+        title: path.basename(articleName, '.md'),
+        description: articleHTML,
+        status: 1,
+      };
+      cache.articleCache[articleName].lastModified = localLastModified;
+      fullArticlePromises.push(articleUpload('PUT', articleObj.id, content));
+    }
+  });
+
+  // Making sure all the updated articles are done before we
+  // save cache again.
+  await Promise.allSettled(fullArticlePromises);
 
   await cache.updateFreshDeskCacheFile();
 }
@@ -481,11 +523,11 @@ async function uploadFiles() {
 
 //         // console.log(desc);
 
-//         let content = {
-//           title: path.basename(article, '.md'),
-//           description: htmlToUpload,
-//           status: 1,
-//         };
+        // let content = {
+        //   title: path.basename(article, '.md'),
+        //   description: htmlToUpload,
+        //   status: 1,
+        // };
 
 //         articleUpload('PUT', thisArticle.articleID, content);
 //         thisArticle.lastModified = fileLastModified;
@@ -538,10 +580,10 @@ const getArticleNamesInDirectory = source =>
     })
     .map(dirent => dirent.name);
 
-// const getLastModifiedTime = (path) => {
-//   const stats = fs.statSync(path);
-//   return stats.mtime;
-// };
+const getLastModifiedTime = (path) => {
+  const stats = fs.statSync(path);
+  return stats.mtime;
+};
 
 // /**
 //  * If our document is trying to link to another article on FreshDesk,

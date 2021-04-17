@@ -1,96 +1,94 @@
-/* eslint-disable no-unused-vars */
-// Stephen: Commenting this part out just so we have to demo
-// version working. This is more-or-less a copy of Cian's PDF file
-
-// // NOT TESTED! Probably doesn't need to be it's
-// // own file, but it will be while I try to make it work
-// // const path = require('path');
-// 'use strict';
-
-// const { exec } = require('child_process');
-// const glob = require('glob');
-
-// const css = 'defaultCSS.css';
-// const fileDirectory = process.cwd();
-
-// // for all files
-// let targetFiles = glob.sync(`${fileDirectory}/**/*.md`);
-
-// // should store html version in fileDirectory/[relativePath],
-// // with an as-of-yet uncreated css file
-// targetFiles.forEach(inputFile => {
-//   exec(`pandoc -s -c ${css} "${inputFile}" -o "${inputFile}.html"`,
-//     (error, stdout, stderr) => {
-//       if (error) {
-//         console.error(error);
-//         return;
-//       }
-//       console.log(stdout);
-//     });
-// });
-
 'use strict';
+
+// We've separated the HTML generation into it's own file,
+// and tried to keep FreshDesk-specific stuff to a minimum.
+
+const marked = require('marked');
+const renderer = new marked.Renderer();
+const fs = require('fs');
+
+// importing cache, so that we don't need to pass it
+// as a parameter from FreshDesk.js
+const cache = require('./cacheFreshDesk');
+
+renderer.link = (href, title, text) => {
+
+  let internalLink = href.match(/^\$\$\/[^/]*\/?([^#]*)(#(.*))?/);
+  // if it is a valid internal link, i.e. starts with "$$/",
+  // then this will produce an array in the form
+  // internalLink[1] = "article name"
+  // if(internalLink[2]), then section is specified
+  // internalLink[3] = "section name"
+
+  let sectionLinkOnly = href.match(/^#(.*)$/);
+  // if it is just a "#something" link, we still
+  // need to update the ID, but don't change anything else
+
+  if (sectionLinkOnly) { // if a section link is specified an nothing else
+    href = '#DOCBUILD' + sectionLinkOnly[1]
+      .toLowerCase()
+      .replace(/[^\w]/g, '');
+  } else if (internalLink) { // if it is an internal document
+    // eslint-disable-next-line no-unused-vars
+    let articleName = internalLink[1];
+    let sectionIsSpecified = internalLink[2]; // boolean
+    let sectionName = internalLink[3];
+
+    // we need to change the formatting of the section string so
+    // that the ID of "#This is a Heading" in HTML is
+    // id="#DOCBUILDthisisaheading", we need it to be unique
+    // because we don't know how FreshDesk is going to modify
+    // the IDs when it renders it in HTML
+    if (sectionIsSpecified) {
+      sectionName =
+        '#DOCBUILD' + text
+          .toLowerCase()
+          .replace(/[^\w]/g, '');
+    } else sectionName = ''; // if no section specified, we leave this blank
+
+    let articleID = cache.articleCache[articleName].id;
+
+    // FRESHDESK SPECIFIC:
+    let helpdeskName = process.env.FRESHDESK_HELPDESK_NAME;
+    // eslint-disable-next-line max-len
+    href = 'https://' + helpdeskName + '.freshdesk.com/a/solutions/articles/' + articleID + sectionName;
+  }
+  // for anything else, just leave it unmodified
+
+  // We now just return a <a> tag with our href link
+  return `<a href="${href}">${text}</a>`;
+};
+
+// For when the MD file contains an image link:
+renderer.image = (href, title, text) => {
+  // checking if our link starts with "$$/", i.e. it is an
+  // internal link
+  let imgLink = href.match(/^\$\$\/(.*)/);
+  if (imgLink) href = cache.imageCache[imgLink[1]];
+
+  return `<img src=${href} title="${title}">${text}</img>`;
+};
+
+// For when the MD file contains an heading, we need to
+// modify it's ID for the HTML
+renderer.heading = (text, level) => {
+  let updatedHeaderID =
+    'DOCBUILD' + text
+      .toLowerCase()
+      .replace(/[^\w]/g, '');
+
+  return `<h${level} id="${updatedHeaderID}">${text}</h${level}>`;
+};
+
+marked.use({ renderer });
+
+function convertHTML(directory) {
+  return marked(fs.readFileSync(directory, 'utf-8'));
+}
+
 
 // required to pass command line arguments from index.js
 module.exports = {
-  docbuildHTML: docbuildHTML,
+  convertHTML: convertHTML,
 };
 
-// for full md-to-pdf config options see:
-// https://github.com/simonhaenisch/md-to-pdf/blob/master/src/lib/config.ts
-const outputOptions = {
-  // array of paths to stylesheets
-  // stylesheet:[path.resolve('./StyleSheets/Stylesheet2.css')],
-
-  // string of extra css properties
-  css: '',
-  as_html: true,
-
-  // extra options to pass to marked (the .md to .html renderer)
-  marked_options: {},
-
-  // options to be passed to puppeteer's pdf renderer
-  pdf_options: {
-    printBackground: true,
-    format: 'a4',
-    margin: {
-      top: '30mm',
-      right: '40mm',
-      bottom: '30mm',
-      left: '20mm',
-    },
-  },
-};
-
-function docbuildHTML(argv) {
-  const { mdToPdf } = require('md-to-pdf');
-  const path = require('path');
-  const fs = require('fs');
-  const glob = require('glob');
-
-  let inputDir = argv.source;
-  let outputDir = argv.html_destination;
-
-  if (!fs.existsSync(outputDir)) {
-    fs.mkdirSync(outputDir);
-  }
-
-  let targetFiles = glob.sync(`${inputDir}/**/*.md`);
-
-  // // FIXME: literally no idea why this won't work forwards
-  // // Stephen: I removed .reverse(), but `docbuild --html` needs to be called
-  // // in the sample_documents folder (i.e the directory that contains
-  // // the docs/ folder)
-  targetFiles.reverse().forEach(inputFile => {
-    // same name as the input file, and places it in the `build` directory
-    let baseName = path.basename(inputFile, path.extname(inputFile));
-
-    console.log('BASE NAME' + baseName.toUpperCase());
-    let htmlFilePath = path.join(outputDir, baseName + '.html');
-
-    mdToPdf({ path: inputFile }, outputOptions)
-      .then(data => fs.writeFileSync(htmlFilePath, data.content))
-      .then(() => console.log(`${path.basename(htmlFilePath)} created!`))
-      .catch(console.error);
-  });
-}
