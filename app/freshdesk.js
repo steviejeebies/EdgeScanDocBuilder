@@ -290,20 +290,23 @@ async function uploadFiles() {
     }
   }
 
-  // Trying to think of a cleaner way of doing this, but can't think
-  // of anything. Iterate through the folders, getting all the articles
-  // in each folder. Add them to cache, regardless of if they're in cache
-  // already or not (although, if they are not in cache already, then
-  // their ID value will be blank - we can use this for later to determine
-  // if we should upload them)
-
-  // Article Cache has following structure:
+  // Get all the local articles. Add basic info about them to cache.
+  // All we can do is, check if its already in cache - if it is, then
+  // we move on. If it isn't, then we add an entry for this article,
+  // but the only info we can add at the moment is its folder ID and
+  // its directory. The loop following this one will be creating
+  // dummy articles for these unrecognised files. We could probably
+  // fuse this forEach() and the for-loop after it into one loop,
+  // but I don't want to rock the boat at the moment, it's working well.
   // exports.articleCache = {
   //   'Article Name 1': {
   //     id: 1234,
   //     folderID: 9999,
   //     lastModified: 'somedate',
+  //     directory: './docs/chapter/thisArticle.md',
   //   },
+  //   'Article Name 2': {...}
+  //  }
 
   let allLocalArticles = glob.sync(`${argv.source}/*/*.md`);
 
@@ -412,185 +415,23 @@ async function uploadFiles() {
   // save cache again.
   await Promise.allSettled(fullArticlePromises);
 
-  console.log(`${numArticlesUploaded} ${(numArticlesUploaded === 1 ? 'article has' : 'articles have')} been uploaded to FreshDesk!`);
+  console.log(
+    `${numArticlesUploaded} ${(numArticlesUploaded === 1 ? 'article has' : 'articles have')} been uploaded to FreshDesk!`);
   if (numArticlesUploaded === 0)
     console.log(
-      'If you meant for articles to be uploaded this run, then you may need to check (or delete) the cache files in your document folder.');
+      'If you meant for articles to be uploaded this run, then you may' +
+      'need to check (or delete) the cache files in your document folder.');
 
   await cache.updateFreshDeskCacheFile();
 }
-//   // Now we have the Category/Document name, we check our cache for
-//   // its ID, or create a Category with this name on FreshDesk, and add
-//   // it to our cache
-
-//   if (freshDeskCache.categoryName === categoryName)
-//     categoryID = freshDeskCache.categoryID;
-//   else {
-//     categoryID = await getFreshDeskStructureID(
-//       categoryAPIEndPoint, categoryPOSTContent(categoryName));
-//     // If the category name was invalid for our history, then we
-//     // have to create a new
-//     freshDeskCache.categoryID = categoryID;
-//     freshDeskCache.categoryName = categoryName;
-//     freshDeskCache.folders = [];
-//   }
-
-//   // Now we need to know the names of all the Chapters/Folders in this
-//   // Category/Document.
-
-//   let chapters = getChapterNamesInDirectory(argv.source);
-//   let numChapters = chapters.length;
-//   let chapterCount = 0;
-
-//   if (freshDeskCache.folders === undefined)
-//     freshDeskCache.folders = [];
-
-//   let knownFolders = freshDeskCache.folders;
-
-//   // new loop here, so that article & folder IDs already generated (for purposes of linking)
-//   for (const chapter of chapters) {
-//     let thisFolder =
-//       knownFolders.filter(({folderName}) => folderName === chapter)[0];
-//     let folderID;
-
-//     if (thisFolder === undefined) {
-//       folderID = await getFreshDeskStructureID(
-//         folderInCategoryAPIEndPoint(categoryID), folderPOSTContent(chapter));
-//       knownFolders.push(
-//         {
-//           folderName: chapter,
-//           folderID: folderID,
-//           articles: [],
-//         });
-
-//       thisFolder = knownFolders[knownFolders.length - 1];
-//     } else folderID = thisFolder.folderID;
-
-//     let localArticles = getArticleNamesInDirectory(argv.source + '/' + chapter);
-//     let numArticles = localArticles.length;
-//     let articleCount = 0;
-
-//     if (thisFolder.articles === undefined)
-//       thisFolder.articles = [];
-//     let uploadedArticles = thisFolder.articles;
-
-//     for (const article of localArticles) {
-//       let thisArticle =
-//         uploadedArticles.filter(({articleName}) => articleName === article)[0];
-
-//       let fileLastModified = getLastModifiedTime(
-//         argv.source + '/' + chapter + '/' + article);
-
-//       if (thisArticle === undefined) {
-//         // if no matching article was found
-//         // convert MD file to HTML and upload new article to FreshDesk
-
-//         articleUpload('POST', folderID, dummyHTML(article))
-//           .then(thisArticle => (
-//             uploadedArticles.push(
-//               {
-//                 articleName: article,
-//                 articleID: thisArticle,
-//                 lastModified: fileLastModified,
-//               },
-//             )))
-//           .then(() => articleCount++)
-//           .then(() => {
-//             if (articleCount === numArticles){
-//               chapterCount++;
-//               if (chapterCount === numChapters){
-//                 updateFreshDeskCacheFile();
-//                 uploadData(chapters, knownFolders);
-//               }
-//             }
-//           });
-//       }
-//     }
-//   }
-// }
-
-
-// function uploadData(chapters, knownFolders){
-//   for (const chapter of chapters) {
-//     let thisFolder =
-//       knownFolders.filter(({folderName}) => folderName === chapter)[0];
-//     let folderID = thisFolder.folderID;
-
-//     let localArticles = getArticleNamesInDirectory(argv.source + '/' + chapter);
-
-//     if (thisFolder.articles === undefined)
-//       thisFolder.articles = [];
-//     let uploadedArticles = thisFolder.articles;
-
-//     for (const article of localArticles) {
-//       let thisArticle =
-//       uploadedArticles.filter(({articleName}) => articleName === article)[0];
-//       // console.log(thisArticle);
-//       let fileLastModified = getLastModifiedTime(
-//         argv.source + '/' + chapter + '/' + article);
-
-//       if (article.lastModified !== fileLastModified) {
-//         // convert MD file to HTML and put update version on FreshDesk API
-
-//         let converter = new showdown.Converter();
-//         converter.setOption('tables', true);
-//         converter.setOption('simpleLineBreaks', true);
-//         let html = converter.makeHtml(fs.readFileSync(argv.source + '/' + chapter + '/' + article, 'utf-8'));
-
-//         let htmlToUpload = htmlLinkRegex(html);
-
-//         // console.log(desc);
-
-//        // let content = {
-//        //   title: path.basename(article, '.md'),
-//        //   description: htmlToUpload,
-//        //   status: 1,
-//        // };
-
-//         articleUpload('PUT', thisArticle.articleID, content);
-//         thisArticle.lastModified = fileLastModified;
-//       }
-//     }
-//   }
-// }
-
-// function htmlLinkRegex(html) {
-//   return html.replace(
-//     /<a\s+(?:[^>]*?\s+)?href=(["'])(.*?)\1>/gm,
-//     function(match, text, link) {
-//       let isExternalLink = (link.match(/https?:\/\/[^\s]+/g) !== null);
-//       let isAnotherArticle = (link.match(/\.md/g) !== null);
-//       let isImage = (link.match(/\.(gif)|(jpe?g)|(tiff)|(png)|(bmp)$/i) !== null);
-
-//       // If it is an interal link, pointing to a section of this article
-//       if (link[0] === '#') {
-//         return `<a href="${link}">`;
-//       }
-
-//       // TODO: UNTESTED
-//       if (!isExternalLink && isImage && localImages[link]) {
-//         return `<img src="${localImages[link]}>`;
-//       }
-
-//       if (!isExternalLink && isImage) {
-//         return `<img src="${localImages[link]}>`;
-//       }
-
-//       // if the link is to a different file
-//       if (!isExternalLink && isAnotherArticle) {
-//         let newLink = formatLink(link);
-//         return `<a href="${newLink}">`;
-//       }
-//       // for anything else, just leave it unmodified
-//       return match;
-//     });
-// }
 
 const getChapterNamesInDirectory = source =>
   fs.readdirSync(source, { withFileTypes: true })
     .filter(dirent => dirent.isDirectory())
     .map(dirent => dirent.name);
 
+
+// Not needed anymore, but I'll leave it here anyway
 const getArticleNamesInDirectory = source =>
   fs.readdirSync(argv.source + '/' + source, { withFileTypes: true })
     .filter(dirent => {
@@ -605,6 +446,12 @@ const getLastModifiedTime = (path) => {
   return stats.mtime;
 };
 
+// Not ideal, but does the job. Usually we can access/remove and element
+// from cache with cache.cacheName[cacheItem], but in the case of removing
+// a folder from folderCache when we only have folderID value (given folder
+// cache has the structure {folderName: folderID}), then the following 
+// function was needed.
+
 function removeFromCache(cache, value) {
   for (let c in cache){
     if (cache.hasOwnProperty(c) && cache[c] === value) {
@@ -612,99 +459,3 @@ function removeFromCache(cache, value) {
     }
   }
 }
-
-// /**
-//  * If our document is trying to link to another article on FreshDesk,
-//  * this function will find that article ID (in our cache) and format
-//  * it so that it becomes a working link
-//  * @param {String} link the MD article link
-//  * @returns {String} The URL of the article that the document is trying
-//  * to link to
-//  */
-// function formatLink(link){
-//   let newLink = '';
-//   let subsectionLink = '';
-//   let article = path.basename(link);
-//   let match = '';
-
-//   // If the article link contains a link to a subsection of
-//   // that article, then we need to extract the name of that
-//   // subsection
-
-//   // eslint-disable-next-line no-cond-assign
-//   if (match = article.match(/([^#]*)(#.*)/)) {
-//     article = match[1];
-//     subsectionLink = match[2];
-//   }
-
-//   // extract the chapter name from the string
-//   let chapterName = link.match(/([^/]*)\/.*/)[1];
-
-//   // Search through folders and articles for matching article name
-//   let knownFolders = freshDeskCache.folders;
-//   let thisFolder = knownFolders.filter(({folderName}) => folderName === chapterName)[0];
-//   let knownArticles = thisFolder.articles;
-//   let thisArticle = knownArticles.filter(({articleName}) => articleName === article)[0];
-
-//   // If we found a matching article
-//   if (thisArticle !== undefined){
-//     newLink =
-//       'https://' + helpdeskName + '.freshdesk.com/a/solutions/articles/' + thisArticle.articleID + subsectionLink;
-//     return newLink;
-//   } else { // else there's nothing we can do with it, return as is.
-//     return link;
-//   }
-// }
-
-// // Lets say we have a doc/chapter/section folder hierarchy. We've
-// // already uploaded this to FreshDesk, which means that the
-// // category, folder and article already exist, and have been
-// // assigned IDs by the FreshDesk API. We don't need to check if the
-// // category/folder/article exists with sequential GET requests,
-// // because that would be a waste of time. So what we'll do is store
-// // a '.docbuild.json' file in the to level folder of the document.
-// // This will save the name + id of the category, the name + id of
-// // all the folders, and the name + id of all the articles, all as
-// // one big object. This means that we will PUT (update) instead of
-// // POST (create new) for each of these.
-
-// // {
-// //   categoryName : 'name of our document, same as the name of the doc file',
-// //   categoryID : 'a unique ID assigned for this item by FreshDesk',
-// //   folders : [  // array
-// //     {
-// //       folderName : 'name of chapter folder',
-// //       folderID : '...',
-// //       articles : [
-// //         {
-// //           articleName : 'name of MD file',
-// //           articleID : '...',
-// //           lastModified : 'a timestamp'
-// //         },
-// //         {
-// //           articleName : 'name of MD file',
-// //           articleID : '...',
-// //           lastModified : 'a timestamp'
-// //         },
-// //       ]
-// //     }
-// //   ]
-// // }
-
-// // function readOrCreateFreshDeskCacheFile() {
-// //   try {
-// //     let data = fs.readFileSync(argv.source + logFileName);
-// //     freshDeskCache = JSON.parse(data);
-// //   } catch (err) {
-// //     // if file does not exist, we make an empty file
-// //     freshDeskCache = {};
-// //     fs.writeFileSync(argv.source + logFileName,
-// //       JSON.stringify(freshDeskCache, null, 4));
-// //   }
-// // }
-
-// // function updateFreshDeskCacheFile() {
-// //   fs.writeFileSync(argv.source + logFileName,
-// //     JSON.stringify(freshDeskCache, null, 4));
-// // }
-
