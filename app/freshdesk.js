@@ -153,15 +153,34 @@ async function articleUpload(method, id, content) {
 // FreshDesk of either a Category or a Folder. If nothing is
 // found on FreshDesk matching our description, then we create
 // a new version.
-// TODO: Might be a good idea to immediately update cache to
-// whatever is returned here, will lower the number of API
-// calls a good bit.
 
-async function getFreshDeskStructureID(apiEndPoint, content) {
+async function getFreshDeskCategoryID(apiEndPoint, content) {
   return apiCallFreshDesk('GET', apiEndPoint)
     .then(
       structuresFound => {
         return structuresFound.find(struct => struct.name === content.name);
+      })
+    .then(result => {
+      if (result === undefined) {
+        return makeFreshDeskStructure(apiEndPoint, content);
+      } else return result.id;
+    });
+}
+
+async function getFreshDeskFolderID(apiEndPoint, content) {
+  return apiCallFreshDesk('GET', apiEndPoint)
+    .then(
+      structuresFound => {
+        // We've just asked FreshDesk to give us all the folders
+        // it current has. To save on API calls in the future, we
+        // will use this first responce to immediately add to our
+        // cache file.
+        structuresFound.forEach(onlineFolder => {
+          cache.folderCache[onlineFolder.name] = onlineFolder.id;
+        });
+        // Then we can just return the value stored in cache for
+        // the folder we are looking for
+        return cache.folderCache[content.name];
       })
     .then(result => {
       if (result === undefined) {
@@ -219,7 +238,7 @@ async function uploadFiles() {
     // we'll set categoryID and equivalent area in the cache
     // at the same time
     categoryID = cache.categoryCache[categoryName] =
-      await getFreshDeskStructureID(
+      await getFreshDeskCategoryID(
         categoryAPIEndPoint, categoryPOSTContent(categoryName));
   }
 
@@ -232,11 +251,11 @@ async function uploadFiles() {
   for (let i = 0; i < folderNames.length; i++) {
     if (!cache.folderCache[folderNames[i]])
       cache.folderCache[folderNames[i]] =
-      await getFreshDeskStructureID(
+      await getFreshDeskFolderID(
         folderInCategoryAPIEndPoint(categoryID), folderPOSTContent(folderNames[i]));
   }
 
-  
+
   await cache.updateFreshDeskCacheFile();
 }
 
