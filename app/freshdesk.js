@@ -400,7 +400,7 @@ async function uploadFiles() {
     `${numArticlesUploaded} ${(numArticlesUploaded === 1 ? 'article has' : 'articles have')} been uploaded to FreshDesk!`);
   if (numArticlesUploaded === 0)
     console.log(
-      'If you meant for articles to be uploaded this run, then you may' +
+      'If you meant for articles to be uploaded this run, then you may ' +
       'need to check (or delete) the cache files in your document folder.');
 
   await cache.updateFreshDeskCacheFile();

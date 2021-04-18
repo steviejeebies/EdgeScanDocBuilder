@@ -55,7 +55,10 @@ async function docbuildPDF() {
   // https://github.com/steviejeebies/EdgeScanDocBuilder/issues/27
   // for a run-through of what the following code is doing
 
-  let groupedInput = `# ${argv['pdf-title']}`;
+  let firstPageTitle = (argv['pdf-title']) ? 
+    argv['pdf-title'] : path.basename(argv.source);
+
+  let groupedInput = `# ${firstPageTitle}`;
   targetFiles.forEach(inputFile => {
     let trimmedPath = path.relative(inputDir, inputFile);
     let filePath = trimmedPath.replace('\\', '/');
