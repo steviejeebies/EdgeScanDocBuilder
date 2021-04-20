@@ -88,9 +88,17 @@ async function docbuildPDF() {
           `<h${level} id="${filePath}#${id}">${title}</h${level}>\n`;
       });
 
+    // allow linking to local images prefixed with `$$/`
+    content = content.replace(
+      /\!\[([^\[]+)\]\(([^\)]+)\)/gm,
+      function(match, title, path) {
+        let href = path.replace('$$/', '');
+        return `<img src=${href} alt="${title}" />`;
+      });
+
     // allow links to the namespaced IDs
     content = content.replace(
-      /^\s*\[([^\[]+)\]\(([^\)]+)\)/gm,
+      /\[([^\[]+)\]\(([^\)]+)\)/gm,
       function(match, text, link) {
         // links to another local file begin `$$/`
         let isLocalFile = link.match(/^\$\$\/.*/g);
@@ -107,14 +115,6 @@ async function docbuildPDF() {
 
         // for anything else, just leave it unmodified
         return match;
-      });
-
-    // allow linking to local images prefixed with $$/
-    content = content.replace(
-      /^\s*\!\[([^\[]+)\]\(([^\)]+)\)/gm,
-      function(match, title, path) {
-        let href = path.replace('$$/', '');
-        return `<img src=${href} alt="${title}" />`;
       });
 
     groupedInput += content;
