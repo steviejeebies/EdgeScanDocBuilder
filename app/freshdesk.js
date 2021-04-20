@@ -427,11 +427,11 @@ const getLastModifiedTime = (path) => {
   return stats.mtime;
 };
 
-// Not ideal, but does the job. Usually we can access/remove and element
-// from cache with cache.cacheName[cacheItem], but in the case of removing
-// a folder from folderCache when we only have folderID value (given folder
-// cache has the structure {folderName: folderID}), then the following
-// function was needed.
+// Usually we can access/remove and element from cache with
+// cache.cacheName[cacheItem], but in the case of removing
+// a folder from folderCache when we only have folderID value
+// (given folder cache has the structure {folderName: folderID}),
+// then the following  function was needed.
 
 function removeFromCache(cache, value) {
   for (let c in cache){
