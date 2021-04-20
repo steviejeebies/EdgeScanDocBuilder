@@ -65,7 +65,7 @@ module.exports = yargs
       'you. If `true`, visible to everyone immediately.',
       type: 'boolean',
       default: true,
-    }
+    },
     // 'freshdesk-ignore-cache': {
     //   description: '',
     //   type: 'boolean',
