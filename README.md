@@ -29,6 +29,7 @@ To uninstall:
 ```
 npm uninstall -g
 ```
+We didn't end up using the DockerFile at all.
 
 ### Usage
 Your documents will have the folder structure documentFolder/ChapterFolder/article.md. Call ```docbuild [args]``` **in the directory containing documentFolder**. You must specify the name of the document folder with ```docbuild --source='./documentName'```, else it will default to ```./docs```.
