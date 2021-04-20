@@ -8,7 +8,7 @@ sample_documents/ideal_sample_docs/docs/.DOCBUILD_categoryCache.json
 sample_documents/ideal_sample_docs/docs/.DOCBUILD_folderCache.json
 sample_documents/ideal_sample_docs/docs/.DOCBUILD_imageCache.json
 sample_documents/ideal_sample_docs/docs/.docbuild.json
-
+.vscode
 # Logs
 logs
 *.log
