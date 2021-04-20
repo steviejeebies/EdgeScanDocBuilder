@@ -56,7 +56,6 @@ CSS can be inputted as a command line argument, but the following snippet from P
       },
 ```
 
-#### S
 ### Group 30 - Team Members:
 * Stephen Rowe
 * James Rowland
