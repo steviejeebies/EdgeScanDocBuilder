@@ -15,9 +15,9 @@ const argv = require('./cli');
 // eslint-disable-next-line no-unused-vars
 let highlight = function(code, lang, callback) {
   // eslint-disable-next-line max-len
-  require('pygmentize-bundled')({ lang: lang, format: 'html' }, code, function(err, result) {
-    callback(err, result.toString());
-  });
+  // require('pygmentize-bundled')({ lang: lang, format: 'html' }, code, function(err, result) {
+  //   callback(err, result.toString());
+  // });
 };
 
 async function docbuildPDF() {
