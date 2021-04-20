@@ -10,10 +10,6 @@ module.exports = yargs
   .env()
 
   // Global options
-  .option('test', {
-    description: 'test',
-    type: 'boolean',
-  })
   .option('source', {
     description: 'The source folder containing the markdown documents',
     default: './docs',
@@ -63,6 +59,13 @@ module.exports = yargs
       type: 'boolean',
       default: false,
     },
+    publish_public: {
+      description: 'If `false`, then when the documentation is uploaded ' +
+      'to FreshDesk, it will be saved as a draft and will only be visible to ' +
+      'you. If `true`, visible to everyone immediately.',
+      type: 'boolean',
+      default: true,
+    }
     // 'freshdesk-ignore-cache': {
     //   description: '',
     //   type: 'boolean',
@@ -70,7 +73,8 @@ module.exports = yargs
     // },
   })
   .group(
-    ['freshdesk', 'FRESHDESK_TOKEN', 'FRESHDESK_HELPDESK_NAME'],
+    ['freshdesk', 'FRESHDESK_TOKEN', 'FRESHDESK_HELPDESK_NAME',
+      'freshdesk_start_fresh', 'publish_public'],
     'Freshdesk Upload:')
 
   // PDF Renderer related options
@@ -96,7 +100,7 @@ module.exports = yargs
     },
   })
   .group(
-    ['pdf', 'pdf_destination'],
+    ['pdf', 'pdf_destination', 'pdf_title', 'pdf_headerfooter', 'stylesheet'],
     'PDF:')
   // No use for this
   // .options({

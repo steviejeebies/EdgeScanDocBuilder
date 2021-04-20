@@ -67,7 +67,7 @@ const dummyHTML = (article) => {
   return {
     title: path.basename(article, '.md'),
     description: '<h1>PLACEHOLDER FILE</h1>',
-    status: 1,
+    status: 1, // Should always be 1, as this file should never be visible to users
   };
 };
 
@@ -379,7 +379,7 @@ async function uploadFiles() {
       let content = {
         title: path.basename(articleName, '.md'),
         description: articleHTML,
-        status: 1,
+        status: (argv.publish_public ? 2 : 1), // determines if it is published as a draft or not
       };
 
       // This next line could be a bit wonky - updating the lastModified value
