@@ -102,16 +102,24 @@ async function docbuildPDF() {
           `<h${level} id="${filePath}#${id}">${title}</h${level}>\n`;
       });
 
+    // allow linking to local images prefixed with `$$/`
+    content = content.replace(
+      /\!\[([^\[]+)\]\(([^\)]+)\)/gm,
+      function(match, title, path) {
+        let href = path.replace('$$/', '');
+        return `<img src=${href} alt="${title}" />`;
+      });
+
     // allow links to the namespaced IDs
     content = content.replace(
       /\[([^\[]+)\]\(([^\)]+)\)/gm,
       function(match, text, link) {
-        let isExternalLink = link.match(/https?:\/\/[^\s]+/g);
-        let isAnotherChapter = link.match(/.md/g);
+        // links to another local file begin `$$/`
+        let isLocalFile = link.match(/^\$\$\/.*/g);
 
         // if the link is to a different file
-        if (!isExternalLink && isAnotherChapter) {
-          return `<a href="#${link}">${text}</a>`;
+        if (isLocalFile) {
+          return `<a href="#${link.replace('$$/', '')}">${text}</a>`;
         }
 
         // if the link is to within its own file
