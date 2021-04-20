@@ -28,15 +28,6 @@
 4. Fourth item
 
 
-### Codeblock
-```html
-<html>
-    <body>
-        <something>
-    </body>
-<html>
-```
-
 ### Linking Tests
 * [Internal link (General Usage)](#general-usage)
 * [Another internal link](#an-image)
@@ -49,6 +40,28 @@
 ![Shiprock]($$/1_formatting_test_section/Shiprock.png)
 
 
+### Codeblock
+```html
+<html>
+    <body>
+        <something>
+    </body>
+<html>
+```
+
+### Codeblock With Syntax Highlighting
+```python
+def split_string(my_string: str, seps: list):
+  items = []
+  i = 0
+  while i < len(my_string):
+    sub = next_word_or_separator(my_string, i, seps)
+    if sub[0] not in seps:
+      items.append(sub) 
+    i += len(sub)
+  return items
+split_string(my_string)  # ["Hi,", "fam!"]
+```
 # General Usage
 
 The table below gives an overview of the possible actions available for an API endpoint.

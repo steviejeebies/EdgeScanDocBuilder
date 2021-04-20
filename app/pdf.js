@@ -7,6 +7,19 @@ const fs = require('fs');
 const glob = require('glob');
 const argv = require('./cli');
 
+// Marked documentation says that this is what is used for syntax highlighting,
+// but it seems to be enabled by default. To change the syntax highlighter, set
+// marked_options: {highlight : yourHighlightingFunction } in the below
+// outputOptions variable below.
+
+// eslint-disable-next-line no-unused-vars
+let highlight = function(code, lang, callback) {
+  // eslint-disable-next-line max-len
+  require('pygmentize-bundled')({ lang: lang, format: 'html' }, code, function(err, result) {
+    callback(err, result.toString());
+  });
+};
+
 async function docbuildPDF() {
   let inputDir = argv.source;
   let outputDir = argv.pdf_destination;
@@ -38,6 +51,8 @@ async function docbuildPDF() {
       footerTemplate: fs.readFileSync(`${templatesDir}/footer.html`, 'utf-8'),
     },
   };
+
+
 
   // add any stylesheets in a way that it doesn't override the default one when
   // none are explicitly passed to docbuild
