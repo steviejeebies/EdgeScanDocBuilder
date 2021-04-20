@@ -26,8 +26,3 @@ if (argv.freshdesk) {
   let freshdesk = require('./app/freshdesk');
   freshdesk.uploadFiles();
 }
-// TODO: Remove this once it's definitely no longer needed
-if (argv.html) {
-  let html = require('./app/html');
-  html.docbuildHTML(argv);
-}
