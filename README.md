@@ -11,7 +11,7 @@ The formats it supports are:
 
 ### Installation
 
-## Required
+#### Required
 * NodeJS
 
 #### Enviornment Variables
@@ -30,7 +30,7 @@ To uninstall:
 npm uninstall -g
 ```
 
-#### Usage
+### Usage
 Your documents will have the folder structure documentFolder/ChapterFolder/article.md. Call ```docbuild [args]``` **in the directory containing documentFolder**. You must specify the name of the document folder with ```docbuild --source='./documentName'```, else it will default to ```./docs```.
 
 We have given some sample documents to test docbuild out. In this folder we have 'ideal_sample_docs' and 'old_docs' (old_docs is likely out-of-date and doesn't follow the structure that docbuild expects, so you will probably get an error with that folder). We open up cmd inside either of these folders, then run 'docbuild --pdf' or whatever command you want, and it will produce the correct output. 
@@ -42,6 +42,19 @@ Within a document, there are a few rules:
 
 See ```docbuild --help``` for an detailed explanation of the flags you can use to customize your run.
 
+### Styling
+CSS can be inputted as a command line argument, but the following snippet from PDF.js determines the border around the document, worth pointing out. You may need to play around with these values to see what works with the Header and Footer files, as well.
+```
+    pdf_options: {
+      printBackground: true,
+      format: 'a4',
+      margin: {
+        top: '5mm',
+        right: '5mm',
+        bottom: '10mm',
+        left: '5mm',
+      },
+```
 
 ### Group 30 - Team Members:
 * Stephen Rowe
