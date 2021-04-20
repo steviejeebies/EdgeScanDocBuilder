@@ -11,7 +11,7 @@ const glob = require('glob');
 const imgbbUploader = require('imgbb-uploader');
 
 // this is just for a throwaway account, 0 private
-// info on it, doesn't matter if token is public on GitHub
+// info on it, doesn't matter if token is visible on GitHub
 const imgBBToken = '3d083719235d5d9fb11ec9cf902fb954';
 
 let fileTypes = 'gif,jpeg,jpg,tiff,png,bmp,GIF,JPEG,JPG,TIFF,PNG,BMP';
