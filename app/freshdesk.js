@@ -61,7 +61,7 @@ const articleURL = (articleID) =>
 const categoryPOSTContent = function(name) { return {name: name}; };
 
 const folderPOSTContent =
-  function(name) { return {name: name, visibility: 1}; };
+  function(name) { return {name: name, visibility: (argv.publish_public ? 2 : 1)}; };
 
 const dummyHTML = (article) => {
   return {
