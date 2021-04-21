@@ -44,7 +44,7 @@ Within a document, there are a few rules:
 See ```docbuild --help``` for an detailed explanation of the flags you can use to customize your run.
 
 ### Styling
-CSS can be inputted as a command line argument, but the following snippet from PDF.js determines the border around the document. You may need to play around with these values to see what looks well with the Header and Footer files, as well.
+CSS can be inputted as a command line argument, but the following snippet from PDF.js determines the border around the document. You may need to play around with these values to see what looks well with the Header and Footer files, as well. See the [md-to-pdf documentation](https://github.com/simonhaenisch/md-to-pdf/blob/master/readme.md) for further customization.
 ```
     pdf_options: {
       printBackground: true,
