@@ -73,6 +73,14 @@ async function docbuildPDF() {
     argv['pdf-title'] : path.basename(argv.source);
 
   let groupedInput = `# ${firstPageTitle}`;
+  groupedInput += '<br><div style="page-break-after:always;"></div>\n';
+
+  // add contents page placeholder
+  groupedInput += '<h1 id="toc">Table of contents</h1>\n';
+  let toc = [];
+  let tocPlaceholder = '<span id="toc-placeholder"></span>';
+  groupedInput += `${tocPlaceholder}\n`;
+
   targetFiles.forEach(inputFile => {
     let trimmedPath = path.relative(inputDir, inputFile);
     let filePath = trimmedPath.replace('\\', '/');
@@ -97,9 +105,17 @@ async function docbuildPDF() {
           .replace(/<[!\/a-z].*?>/ig, '') // remove html tags
           .replace(/[^\w\s]/g, '') // remove invalid chars
           .replace(/\s/g, '-'); // replace whitespace with a hyphen
+        let anchor = `${filePath}#${id}`;
+
+        // add heading details to table of contents
+        toc.push({
+          title: title,
+          level: level,
+          anchor: anchor,
+        });
 
         return `<span id="${id}"></span>\n` + // this line might be unnecessary
-          `<h${level} id="${filePath}#${id}">${title}</h${level}>\n`;
+          `<h${level} id="${anchor}">${title}</h${level}>\n`;
       });
 
     // allow linking to local images prefixed with `$$/`
@@ -133,6 +149,16 @@ async function docbuildPDF() {
 
     groupedInput += content;
   });
+
+  // render the table of contents and add it to the PDF in the appropriate place
+  let table = '';
+  toc.forEach((heading) => {
+    table += `<p style="margin-left: ${(heading.level - 1) * 10}px">
+    <a href="#${heading.anchor}">${heading.title}</a>
+    </p>
+    `;
+  });
+  groupedInput = groupedInput.replace(tocPlaceholder, table);
 
   let pdfFilePath = path.join(outputDir, 'documentation.pdf');
 
