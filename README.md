@@ -32,7 +32,7 @@ npm uninstall -g
 We didn't end up using the DockerFile at all.
 
 ### Usage
-Your documents will have the folder structure documentFolder/ChapterFolder/article.md. Call ```docbuild [args]``` **in the directory containing documentFolder**. You must specify the name of the document folder with ```docbuild --source='./documentName'```, else it will default to ```./docs```.
+Your documents will have the folder structure documentFolder/ChapterFolder/article.md. Call ```docbuild [args]``` **in the directory containing documentFolder**. You must specify the name of the document folder with ```docbuild --source='./documentFolder'```, else it will default to ```./docs```.
 
 We have given some sample documents to test docbuild out. In this folder we have 'ideal_sample_docs' and 'old_docs' (old_docs is likely out-of-date and doesn't follow the structure that docbuild expects, so you will probably get an error with that folder). We open up cmd inside either of these folders, then run 'docbuild --pdf' or whatever command you want, and it will produce the correct output. 
 
